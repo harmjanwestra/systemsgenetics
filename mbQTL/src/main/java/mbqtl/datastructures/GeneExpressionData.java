@@ -22,13 +22,13 @@ public class GeneExpressionData {
 	public HashMap<String, Integer> geneMap;
 
 	public GeneExpressionData(String geneExpressionDataFile, Set<String> geneSelection, Set<String> requestedSamples) throws IOException {
-		System.out.println("Loading expression data from: " + geneExpressionDataFile);
+		System.out.println("Loading expression/phenotype/feature data from: " + geneExpressionDataFile);
 		if (requestedSamples != null) {
 			System.out.println("Max number of samples: " + requestedSamples.size());
 		}
 
 		if (geneSelection != null) {
-			System.out.println("Max number of genes: " + geneSelection.size());
+			System.out.println("Max number of genes/phenotypes/features: " + geneSelection.size());
 		}
 
 		int genecol = 0;
@@ -52,7 +52,7 @@ public class GeneExpressionData {
 		}
 
 		if (sampleTmp.isEmpty()) {
-			System.out.println("No matching samples found in expression data!");
+			System.out.println("No matching samples found in expression/phenotype/feature data!");
 			System.exit(-1);
 		}
 
@@ -95,17 +95,17 @@ public class GeneExpressionData {
 
 			++lctr;
 			if (geneSelection != null && dataList.size() == geneSelection.size()) {
-				System.out.print(lctr + " lines parsed, " + dataList.size() + " genes loaded.\r");
+				System.out.print(lctr + " lines parsed, " + dataList.size() + " genes/features/phenotypes loaded.\r");
 				break;
 			}
 
 			if (lctr % 2000 == 0) {
-				System.out.print(lctr + " lines parsed, " + dataList.size() + " genes loaded.\r");
+				System.out.print(lctr + " lines parsed, " + dataList.size() + " genes/features/phenotypes loaded.\r");
 			}
 		}
 
 		tf.close();
-		System.out.println(lctr + " lines parsed, " + dataList.size() + " genes loaded.");
+		System.out.println(lctr + " lines parsed, " + dataList.size() + " genes/features/phenotypes loaded. Done parsing.");
 		if (printWarning) {
 			System.err.println("WARNING: some lines in the file " + geneExpressionDataFile + " have fewer elements than specified in the header. Please check your input for broken lines. Missing elements have been set as missing.");
 		}
