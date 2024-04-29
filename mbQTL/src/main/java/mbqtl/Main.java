@@ -209,6 +209,10 @@ public class Main {
 				.withDescription("[determineldgwas] - Match by RsId in stead of full variant id")
 				.create());
 
+		options.addOption(OptionBuilder.withLongOpt("testnonparseablechr")
+				.withDescription("[mbqtl] - Test variants and genes that map to non-oarseable chromosomes (e.g. patch chromosomes)")
+				.create());
+
 
 		try {
 			CommandLineParser parser = new BasicParser();
@@ -519,6 +523,10 @@ public class Main {
 						MbQTL2ParallelCis bQTL = new MbQTL2ParallelCis(vcf, chrom, linkfile, snplimit, genelimit, snpgenelimit, genexpression, geneannotation, output);
 						if (cmd.hasOption("snpannotation")) {
 							bQTL.loadSNPAnnotation(cmd.getOptionValue("snpannotation"));
+						}
+
+						if(cmd.hasOption("testnonparseablechr")){
+							bQTL.setTestNonParseableChr();
 						}
 
 						if (cmd.hasOption("expgroups")) {

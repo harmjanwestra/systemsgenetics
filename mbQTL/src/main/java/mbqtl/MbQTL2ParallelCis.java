@@ -44,6 +44,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
     private boolean replaceMissingGenotypes = false;
     private boolean dumpPermutationPvalues = false;
     private ANALYSISTYPE analysisType = ANALYSISTYPE.CIS;
+    private boolean testNonParseableChr = false;
 
     public MbQTL2ParallelCis(String vcfFile, int chromosome, String linkfile, String snpLimitFile, String geneLimitFile, String snpGeneLimitFile, String geneExpressionDataFile, String geneAnnotationFile, String outfile) throws IOException {
         super(vcfFile, chromosome, linkfile, snpLimitFile, geneLimitFile, snpGeneLimitFile, geneExpressionDataFile, geneAnnotationFile, outfile);
@@ -332,6 +333,12 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                 int stop = pos + cisWindow;
 //				int chr = geneAnnotationObj.getChromosome().getNumber(); // .getChr(geneAnnotationId);
                 Chromosome geneChromosomeObj = geneAnnotationObj.getChromosome();
+
+                if(geneChromosomeObj.getNumber() < 1 && !testNonParseableChr){
+                    logout.writelnsynced("Skipping " + gene + " since maps to an unparseable chromosome.");
+                    continue;
+                }
+
                 Feature cisRegion = new Feature(geneChromosomeObj, start, stop);
 
                 // split expression data per dataset
@@ -871,6 +878,10 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
             }
         }
         return b.toString();
+    }
+
+    public void setTestNonParseableChr() {
+        this.testNonParseableChr = true;
     }
 
     enum ANALYSISTYPE {
