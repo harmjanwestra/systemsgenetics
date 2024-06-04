@@ -2,6 +2,7 @@ package mbqtl;
 
 import mbqtl.datastructures.Dataset;
 import mbqtl.stat.BetaDistributionMLE;
+import mbqtl.stat.FisherWeightedMetaAnalysis;
 import mbqtl.stat.PVal;
 import mbqtl.stat.RankArray;
 import mbqtl.vcf.VCFTabix;
@@ -45,6 +46,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
     private boolean dumpPermutationPvalues = false;
     private ANALYSISTYPE analysisType = ANALYSISTYPE.CIS;
     private boolean testNonParseableChr = false;
+    private METAANALYSISMETHOD metaanalysismethod = METAANALYSISMETHOD.EMP;
 
     public MbQTL2ParallelCis(String vcfFile, int chromosome, String linkfile, String snpLimitFile, String geneLimitFile, String snpGeneLimitFile, String geneExpressionDataFile, String geneAnnotationFile, String outfile) throws IOException {
         super(vcfFile, chromosome, linkfile, snpLimitFile, geneLimitFile, snpGeneLimitFile, geneExpressionDataFile, geneAnnotationFile, outfile);
@@ -84,6 +86,10 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
 
     public void setReplaceMissingGenotypes(boolean replaceMissingGenotypes) {
         this.replaceMissingGenotypes = replaceMissingGenotypes;
+    }
+
+    public void setMetaanalysismethod(METAANALYSISMETHOD method){
+        this.metaanalysismethod = method;
     }
 
     public void run() throws IOException {
@@ -142,66 +148,87 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
         // initialize output
 
         TextFile outTopFx = new TextFile(outputPrefix + "-TopEffects.txt", TextFile.W);
-        String headerTopFx = "Gene\t" +
-                "GeneChr\t" +
-                "GenePos\t" +
-                "GeneStrand\t" +
-                "GeneSymbol\t" +
-                "SNP\t" +
-                "SNPChr\t" +
-                "SNPPos\t" +
-                "SNPAlleles\t" +
-                "SNPEffectAllele\t" +
-                "SNPEffectAlleleFreq\t" +
-                "MetaP\t" +
-                "MetaPN\t" +
-                "MetaPZ\t" +
-                "MetaBeta\t" +
-                "MetaSE\t" +
-                "MetaI2\t" +
-                "NrDatasets\t" +
-                "DatasetCorrelationCoefficients(" + datasetstr + ")\t" +
-                "DatasetZScores(" + datasetstr + ")\t" +
-                "DatasetSampleSizes(" + datasetstr + ")\t" +
-                "NrTestedSNPs\t" +
-                "ProportionBetterPermPvals\t" +
-                "BetaDistAlpha\t" +
-                "BetaDistBeta\t" +
-                "BetaAdjustedMetaP";
-        if (geneGroups != null) {
-            headerTopFx = "Group\t" + headerTopFx;
+        String[] headerTopFx = new String[26];
+        headerTopFx[0] = "Gene";
+        headerTopFx[1] = "GeneChr";
+        headerTopFx[2] = "GenePos";
+        headerTopFx[3] = "GeneStrand";
+        headerTopFx[4] = "GeneSymbol";
+        headerTopFx[5] = "SNP";
+        headerTopFx[6] = "SNPChr";
+        headerTopFx[7] = "SNPPos";
+        headerTopFx[8] = "SNPAlleles";
+        headerTopFx[9] = "SNPEffectAllele";
+        headerTopFx[10] = "SNPEffectAlleleFreq";
+        headerTopFx[11] = "MetaP";
+        headerTopFx[12] = "MetaPN";
+        headerTopFx[13] = "MetaPZ";
+        headerTopFx[14] = "MetaBeta";
+        headerTopFx[15] = "MetaSE";
+        headerTopFx[16] = "MetaI2";
+        headerTopFx[17] = "NrDatasets";
+        headerTopFx[18] = "DatasetCorrelationCoefficients(" + datasetstr + ")";
+        headerTopFx[19] = "DatasetZScores(" + datasetstr + ")";
+        headerTopFx[20] = "DatasetSampleSizes(" + datasetstr + ")";
+        headerTopFx[21] = "NrTestedSNPs";
+        headerTopFx[22] = "ProportionBetterPermPvals";
+        headerTopFx[23] = "BetaDistAlpha";
+        headerTopFx[24] = "BetaDistBeta";
+        headerTopFx[25] = "BetaAdjustedMetaP";
+        if (metaanalysismethod == METAANALYSISMETHOD.FISHERZFIXED || metaanalysismethod == METAANALYSISMETHOD.FISHERZRANDOM) {
+            headerTopFx[14] = "MetaR";
+            headerTopFx[19] = "DatasetFisherZ(" + datasetstr + ")";
+            if (metaanalysismethod == METAANALYSISMETHOD.FISHERZRANDOM) {
+                headerTopFx[11] += "-Random";
+                headerTopFx[14] += "-Random";
+                headerTopFx[19] += "-Random";
+            }
         }
-        outTopFx.writeln(headerTopFx);
+        String headerTopFxStr = Strings.concat(headerTopFx, Strings.tab);
+        if (geneGroups != null) {
+            headerTopFxStr = "Group\t" + headerTopFxStr;
+        }
+        outTopFx.writeln(headerTopFxStr);
         TextFile outAll = null;
         if (outputAll) {
             outAll = new TextFile(outputPrefix + "-AllEffects.txt.gz", TextFile.W);
 //            String headerAll = "Gene\tGeneSymbol\tSNP\tSNPAlleles\tSNPEffectAllele\tMetaP\tMetaPN\tMetaPZ\tMetaBeta\tMetaSE\tNrDatasets\tProportionBetterPermPvals\tBetaAdjustedMetaP";
-            String headerAll =
-                    "Gene\t" +
-                            "GeneChr\t" +
-                            "GenePos\t" +
-                            "GeneStrand\t" +
-                            "GeneSymbol\t" +
-                            "SNP\t" +
-                            "SNPChr\t" +
-                            "SNPPos\t" +
-                            "SNPAlleles\t" +
-                            "SNPEffectAllele\t" +
-                            "SNPEffectAlleleFreq\t" +
-                            "MetaP\t" +
-                            "MetaPN\t" +
-                            "MetaPZ\t" +
-                            "MetaBeta\t" +
-                            "MetaSE\t" +
-                            "MetaI2\t" +
-                            "NrDatasets\t" +
-                            "DatasetCorrelationCoefficients(" + datasetstr + ")\t" +
-                            "DatasetZScores(" + datasetstr + ")\t" +
-                            "DatasetSampleSizes(" + datasetstr + ")";
-            if (geneGroups != null) {
-                headerAll = "Group\t" + headerAll;
+            String[] headerAll = new String[21];
+            headerAll[0] = "Gene";
+            headerAll[1] = "GeneChr";
+            headerAll[2] = "GenePos";
+            headerAll[3] = "GeneStrand";
+            headerAll[4] = "GeneSymbol";
+            headerAll[5] = "SNP";
+            headerAll[6] = "SNPChr";
+            headerAll[7] = "SNPPos";
+            headerAll[8] = "SNPAlleles";
+            headerAll[9] = "SNPEffectAllele";
+            headerAll[10] = "SNPEffectAlleleFreq";
+            headerAll[11] = "MetaP";
+            headerAll[12] = "MetaPN";
+            headerAll[13] = "MetaPZ";
+            headerAll[14] = "MetaBeta";
+            headerAll[15] = "MetaSE";
+            headerAll[16] = "MetaI2";
+            headerAll[17] = "NrDatasets";
+            headerAll[18] = "DatasetCorrelationCoefficients(" + datasetstr + ")";
+            headerAll[19] = "DatasetZScores(" + datasetstr + ")";
+            headerAll[20] = "DatasetSampleSizes(" + datasetstr + ")";
+            if (metaanalysismethod == METAANALYSISMETHOD.FISHERZFIXED || metaanalysismethod == METAANALYSISMETHOD.FISHERZRANDOM) {
+                headerAll[14] = "MetaR";
+                headerAll[19] = "DatasetFisherZ(" + datasetstr + ")";
+                if (metaanalysismethod == METAANALYSISMETHOD.FISHERZRANDOM) {
+                    headerAll[11] += "-Random";
+                    headerAll[14] += "-Random";
+                    headerAll[19] += "-Random";
+                }
             }
-            outAll.writeln(headerAll);
+            String headerAllStr = Strings.concat(headerAll, Strings.tab);
+            if (geneGroups != null) {
+                headerAllStr = "Group\t" + headerAllStr;
+            }
+            outAll.writeln(headerAllStr);
         }
 
         TextFile permutationoutput = null;
@@ -334,7 +361,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
 //				int chr = geneAnnotationObj.getChromosome().getNumber(); // .getChr(geneAnnotationId);
                 Chromosome geneChromosomeObj = geneAnnotationObj.getChromosome();
 
-                if(geneChromosomeObj.getNumber() < 1 && !testNonParseableChr){
+                if (geneChromosomeObj.getNumber() < 1 && !testNonParseableChr) {
                     logout.writelnsynced("Skipping " + gene + " since maps to an unparseable chromosome.");
                     continue;
                 }
@@ -453,6 +480,11 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                             }
                             double[] finalPermutationPvalsForSNP = permutationPvalsForSNP;
                             IntStream.range(-1, nrPermutations).forEach(permutation -> {
+                                FisherWeightedMetaAnalysis fisherZ = null;
+
+                                if (metaanalysismethod == METAANALYSISMETHOD.FISHERZFIXED || metaanalysismethod == METAANALYSISMETHOD.FISHERZRANDOM) {
+                                    fisherZ = new FisherWeightedMetaAnalysis();
+                                }
                                 double[] zscores = new double[datasets.length];
                                 double[] correlations = new double[datasets.length];
                                 int[] samplesizes = new int[datasets.length];
@@ -622,12 +654,45 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
 
                                 if (nDatasets >= minNumberOfDatasets) {
                                     // meta-analyze, weight by sample size
-                                    double metaZ = ZScores.getWeightedZ(zscores, samplesizes);
-                                    double metaP = ZScores.zToP(metaZ);
+                                    double metaZ = 0;
+                                    double metaP = 1;
+                                    double metaBeta = 0;
+                                    double metaBetaSE = 1;
+                                    double metaI2 = 100;
+
+                                    double[] zScoresToPrint = zscores;
+                                    if (metaanalysismethod == METAANALYSISMETHOD.FISHERZFIXED || metaanalysismethod == METAANALYSISMETHOD.FISHERZRANDOM) {
+                                        double[] metaZtmp;
+                                        if (metaanalysismethod == METAANALYSISMETHOD.FISHERZRANDOM) {
+                                            metaZtmp = fisherZ.metaAnalyzeCorrelationsRandomEffect(correlations, samplesizes);
+                                        } else {
+                                            metaZtmp = fisherZ.metaAnalyzeCorrelationsFixedEffect(correlations, samplesizes);
+                                        }
+                                        metaZ = metaZtmp[0];
+                                        metaP = metaZtmp[1];
+                                        metaBeta = metaZtmp[2];
+                                        metaBetaSE = metaZtmp[3];
+                                        metaI2 = metaZtmp[6];
+                                        for (int d = 0; d < correlations.length; d++) {
+                                            double r = correlations[d];
+                                            double z = zscores[d];
+                                            if (!Double.isNaN(z)) {
+                                                zScoresToPrint[d] = fisherZ.correlationToFisherZ(r);
+                                            }
+                                        }
+                                    } else {
+                                        metaZ = ZScores.getWeightedZ(zscores, samplesizes);
+                                        metaP = ZScores.zToP(metaZ);
+                                        if (permutation != -1) {
+                                            double[] betaAndSEEstimate = ZScores.zToBeta(metaZ, overallAltAlleleFreq, totalSampleSize);
+                                            metaBeta = betaAndSEEstimate[0];
+                                            metaBetaSE = betaAndSEEstimate[1];
+                                            Triple<Double, Double, Integer> metaIsq = Heterogeneity.getISq(zscores, samplesizes);
+                                            metaI2 = metaIsq.getLeft();
+                                        }
+                                    }
 
                                     // calculate heterogeneity
-
-
                                     if (permutation != -1) { // this is a permuted result
                                         if (metaP < permutationPvals[permutation]) {
                                             permutationPvals[permutation] = metaP;
@@ -640,9 +705,9 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
 
                                         // calculate overall MAF
 
-                                        double[] betaAndSEEstimate = ZScores.zToBeta(metaZ, overallAltAlleleFreq, totalSampleSize);
-                                        Triple<Double, Double, Integer> metaIsq = Heterogeneity.getISq(zscores, samplesizes);
-                                        double metaI2 = metaIsq.getLeft();
+//                                        double[] betaAndSEEstimate = ZScores.zToBeta(metaZ, overallAltAlleleFreq, totalSampleSize);
+//                                        Triple<Double, Double, Integer> metaIsq = Heterogeneity.getISq(zscores, samplesizes);
+//                                        double metaI2 = metaIsq.getLeft();
                                         // non-permuted p-value
                                         if (metaP <= topUnpermutedResult.metaP) {
                                             boolean replace = true;
@@ -670,12 +735,12 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                                                 topUnpermutedResult.metaPZ = metaZ;
                                                 topUnpermutedResult.metaPD = nDatasets;
                                                 topUnpermutedResult.metaI2 = metaI2;
-                                                topUnpermutedResult.zscores = zscores;
+                                                topUnpermutedResult.zscores = zScoresToPrint;
                                                 topUnpermutedResult.samplesizes = samplesizes;
                                                 topUnpermutedResult.correlations = correlations;
                                                 topUnpermutedResult.snpEffectAlleleFreq = overallAltAlleleFreq;
-                                                topUnpermutedResult.metaBeta = betaAndSEEstimate[0];
-                                                topUnpermutedResult.metaBetaSE = betaAndSEEstimate[1];
+                                                topUnpermutedResult.metaBeta = metaBeta;
+                                                topUnpermutedResult.metaBetaSE = metaBetaSE;
                                                 topUnpermutedResult.snpID = variant.getId();
                                                 topUnpermutedResult.snpPos = variant.getPos();
                                                 topUnpermutedResult.snpAlleles = variant.getAlleles()[0] + "/" + variant.getAlleles()[1];
@@ -701,12 +766,12 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                                                     + "\t" + metaP
                                                     + "\t" + totalSampleSize
                                                     + "\t" + dfDefault.format(metaZ)
-                                                    + "\t" + dfDefault.format(betaAndSEEstimate[0])
-                                                    + "\t" + dfDefault.format(betaAndSEEstimate[1])
+                                                    + "\t" + dfDefault.format(metaBeta)
+                                                    + "\t" + dfDefault.format(metaBetaSE)
                                                     + "\t" + dfDefault.format(metaI2)
                                                     + "\t" + nDatasets
                                                     + "\t" + toNeatStr(correlations)
-                                                    + "\t" + toNeatStr(zscores)
+                                                    + "\t" + toNeatStr(zScoresToPrint)
                                                     + "\t" + toNeatSampleSizeStr(samplesizes);
                                             if (geneGroups != null) {
                                                 outln = groupName + "\t" + outln;
@@ -882,6 +947,12 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
 
     public void setTestNonParseableChr() {
         this.testNonParseableChr = true;
+    }
+
+    enum METAANALYSISMETHOD {
+        EMP,
+        FISHERZFIXED,
+        FISHERZRANDOM,
     }
 
     enum ANALYSISTYPE {
