@@ -101,6 +101,13 @@ public class FisherWeightedMetaAnalysis {
 
         double p = Probability.chiSquareComplemented(df, Q);
 
+        if (ISq < 0) {
+            ISq = 0;
+        }
+        if (ISq > 100) {
+            ISq = 100;
+        }
+
         return new double[]{ISq, LLi2, ULi2, p};
     }
 
