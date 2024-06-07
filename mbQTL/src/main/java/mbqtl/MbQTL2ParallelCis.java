@@ -121,6 +121,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
         System.out.println("Writing all snp/feature pairs: " + outputAll);
         System.out.println("Writing SNP log: " + outputSNPLog);
         System.out.println("Writing all permutations: " + dumpPermutationPvalues);
+        System.out.println("Meta-analysis method:\t" + metaanalysismethod);
         System.out.println();
 
         Chromosome chromosomeObj = Chromosome.parseChr("" + chromosome);
