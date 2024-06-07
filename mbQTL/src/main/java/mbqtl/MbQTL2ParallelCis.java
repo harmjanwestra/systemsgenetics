@@ -88,7 +88,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
         this.replaceMissingGenotypes = replaceMissingGenotypes;
     }
 
-    public void setMetaanalysismethod(METAANALYSISMETHOD method){
+    public void setMetaanalysismethod(METAANALYSISMETHOD method) {
         this.metaanalysismethod = method;
     }
 
@@ -274,7 +274,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                 String groupName = entry.getKey();
                 HashSet<String> groupGenes = entry.getValue();
                 try {
-                    testGenes(groupName, groupGenes, logout, finalSnplogout, finalOutAll1, finalPermutationoutput, outTopFx, randomSeed);
+                    testGenes(groupName, groupGenes, logout, finalSnplogout, finalOutAll1, finalPermutationoutput, outTopFx, randomSeed, testedgenes);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -295,7 +295,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                 HashSet<String> groupGenes = new HashSet<>();
                 groupGenes.add(geneObjs.get(g).getName());
                 try {
-                    testGenes(null, groupGenes, logout, finalSnplogout, finalOutAll1, finalPermutationoutput, outTopFx, randomSeed);
+                    testGenes(null, groupGenes, logout, finalSnplogout, finalOutAll1, finalPermutationoutput, outTopFx, randomSeed, testedgenes);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -329,7 +329,8 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                            TextFile outAll,
                            TextFile outPermutation,
                            TextFile outTopFx,
-                           long[] seed) throws IOException {
+                           long[] seed,
+                           AtomicInteger testedgenes) throws IOException {
 
         double[] permutationPvals = new double[nrPermutations];
         Arrays.fill(permutationPvals, 1);
@@ -858,6 +859,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
             }
 
             if (output) {
+                testedgenes.getAndIncrement();
 //				Integer geneAnnotationId = geneAnnotation.getGeneId(topUnpermutedResult.gene);
                 Gene geneAnnotationObj = geneAnnotation.getGene(topUnpermutedResult.gene);
                 int pos = geneAnnotationObj.getStart(); // .getStartPos(geneAnnotationId);
