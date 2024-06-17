@@ -118,6 +118,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
 //        System.out.println("Re-ranking data:\t");
         System.out.println("Replacing missing genotypes: " + replaceMissingGenotypes);
         System.out.println("Min observations: " + minObservations);
+        System.out.println("Min genotype count:\t" + minGenotypeCount);
         System.out.println("Writing all snp/feature pairs: " + outputAll);
         System.out.println("Writing SNP log: " + outputSNPLog);
         System.out.println("Writing all permutations: " + dumpPermutationPvalues);

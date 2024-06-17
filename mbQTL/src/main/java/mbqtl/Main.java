@@ -225,6 +225,12 @@ public class Main {
                 .withDescription("Perform random effects meta-analysis using weighted fisher Z method")
                 .create());
 
+        options.addOption(OptionBuilder.withLongOpt("mingenotypecount")
+                .hasArg()
+                .withArgName("INT")
+                .withDescription("Minimal number of individuals per genotype group [default: 0]")
+                .create());
+
 
         try {
             CommandLineParser parser = new BasicParser();
@@ -603,6 +609,11 @@ public class Main {
                         }
                         if (cmd.hasOption("fisherzmetarandom")) {
                             bQTL.setMetaanalysismethod(MbQTL2ParallelCis.METAANALYSISMETHOD.FISHERZRANDOM);
+                        }
+
+                        if (cmd.hasOption("mingenotypecount")) {
+                            int mingenotypecount = Integer.parseInt(cmd.getOptionValue("mingenotypecount"));
+                            bQTL.setMinGenotypeCount(mingenotypecount);
                         }
 
                         bQTL.run();
