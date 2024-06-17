@@ -11,229 +11,55 @@ public class Main {
 
         Options options = new Options();
 
-        options.addOption(OptionBuilder.withLongOpt("mode")
-                .withDescription("Mode: [metaqtl|mbqtl|mbqtlsingleds|mbqtlplot|regressqtl|sortfile|determineld|determineldgwas|concatconditional]")
-                .isRequired()
-                .hasArg()
-                .withArgName("STRING")
-                .create("m"));
 
-        options.addOption(OptionBuilder.withLongOpt("vcf")
-                .withDescription("Tabix indexed VCF")
-                .hasArg()
-                .withArgName("PATH")
-                .create("v"));
-        options.addOption(OptionBuilder.withLongOpt("exp")
-                .withDescription("Expression matrix (can be gzipped)")
-                .hasArg()
-                .withArgName("PATH")
-                .create("e"));
+        options.addOption("m", "mode", true, "Mode: [metaqtl|mbqtl|mbqtlsingleds|mbqtlplot|regressqtl|sortfile|determineld|determineldgwas|concatconditional]");
+        options.addOption("v", "vcf", true, "Tabix indexed VCF");
+        options.addOption("e", "exp", true, "Expression matrix (can be gzipped)");
+        options.addOption("eg", "expgroups", true, "File defining groups of phenotypes");
+        options.addOption("chr", true, "Chromosome number");
+        options.addOption("g", "gte", true, "Genotype to expression to dataset linkfile (tab separated)");
+        options.addOption("sgl", "snpgenelimit", true, "SNP-gene limit file (one line per snp-gene combination, tab separated)");
+        options.addOption("sl", "snplimit", true, "SNP limit file (one line per gene ID)");
+        options.addOption("gl", "genelimit", true, "Gene limit file (one line per gene ID)");
+        options.addOption("a", "annotation", true, "Gene annotation file");
+        options.addOption("o", "out", true, "Output prefix");
+        options.addOption("seed", "seed", true, "Random seed [default: 123456789]");
+        options.addOption("perm", "perm", true, "Number of permutations [default: 1000]");
+        options.addOption("ciswindow", "ciswindow", true, "Cis window size [default: 1mb]");
+        options.addOption("maf", "maf", true, "Minor allele frequency threshold [default: 0.01]");
+        options.addOption("cr", "cr", true, "Call-rate threshold [default: 0.95]");
+        options.addOption("hwep", "hwep", true, "Hardy-Weinberg p-value threshold [default: 0.0001]");
+        options.addOption("snpannotation", "snpannotation", true, "SNP annotation file, tab separated: SNPID chr pos");
+        options.addOption("minobservations", "minobservations", true, "Require at least this many observations per dataset (i.e. non-NaN genotypes/phenotypes) [default: 10]");
+        options.addOption("norank", "norank", false, "Do not rank expression data");
+        options.addOption("outputall", "outputall", false, "Output all associations, not just top association per gene");
+        options.addOption("outputallpermutations", "outputallpermutations", false, "Output all permuted associations, not just top association per gene");
+        options.addOption("snplog", "snplog", false, "Output SNP summary stats per snp/gene pair.");
+        options.addOption("nrdatasets", "nrdatasets", true, "Minimum number of datasets required in meta-analysis [default: 2]");
+        options.addOption("replacemissinggenotypes", "replacemissinggenotypes", false, "Replace missing genotypes with average genotype: use this when both genotypes and expression data have missing values and perm > 0");
+        options.addOption("input", "input", true, "Input file");
+        options.addOption("input2", "input2", true, "Input file 2");
+        options.addOption("nriters", "nriters", true, "Nr iters to concatenate using concatconditional");
+        options.addOption("sortbyz", "sortbyz", false, "Sort by Z-score");
+        options.addOption("eqtlset", "eqtlset", true, "[determineldgwas] - List of eQTL snps to test - txt.gz file");
+        options.addOption("eqtlfile", "eqtlfile", true, "[determineldgwas] - eQTL file - txt.gz file");
+        options.addOption("gwasset", "gwasset", true, "[determineldgwas] - List of GWAS snps to test - txt.gz file");
+        options.addOption("gwasassocfile", "gwasassocfile", true, "[determineldgwas] - GWAS association file - txt.gz file");
+        options.addOption("gwaslistfile", "gwaslistfile", true, "[determineldgwas] - GWAS study file - txt.gz file");
+        options.addOption("prunedistance", "prunedistance", true, "[determineldgwas] - Pruning distance [default: 1mb]");
+        options.addOption("prunethreshold", "prunethreshold", true, "[determineldgwas] - Pruning LD threshold [default: 0.2]");
+        options.addOption("ldthreshold", "ldthreshold", true, "[determineldgwas] - LD threshold [default: 0.8]");
+        options.addOption("skipchr6", "skipchr6", false, "[determineldgwas] - Skip chr6 when calculating LD");
+        options.addOption("matchbyrsid","matchbyrsid",false,"[determineldgwas] - Match by RsId in stead of full variant id");
+        options.addOption("testnonparseablechr","testnonparseablechr",false,"[mbqtl] - Test variants and genes that map to non-oarseable chromosomes (e.g. patch chromosomes)");
 
-        options.addOption(OptionBuilder.withLongOpt("expgroups")
-                .withDescription("File defining groups of phenotypes")
-                .hasArg()
-                .withArgName("PATH")
-                .create("eg"));
-        options.addOption(OptionBuilder.withLongOpt("chr")
-                .withDescription("Chromosome number")
-                .hasArg()
-                .withArgName("INT")
-                .create());
-        options.addOption(OptionBuilder.withLongOpt("gte")
-                .withDescription("Genotype to expression to dataset linkfile (tab separated)")
-                .hasArg()
-                .withArgName("PATH")
-                .create("g"));
-
-        options.addOption(OptionBuilder.withLongOpt("snpgenelimit")
-                .withDescription("SNP-gene limit file (one line per snp-gene combination, tab separated)")
-                .hasArg()
-                .withArgName("PATH")
-                .create("sgl"));
-        options.addOption(OptionBuilder.withLongOpt("snplimit")
-                .withDescription("SNP limit file (one line per gene ID)")
-                .hasArg()
-                .withArgName("PATH")
-                .create("sl"));
-
-        options.addOption(OptionBuilder.withLongOpt("genelimit")
-                .withDescription("Gene limit file (one line per gene ID)")
-                .hasArg()
-                .withArgName("PATH")
-                .create("gl"));
-        options.addOption(OptionBuilder.withLongOpt("annotation")
-                .withDescription("Gene annotation file")
-                .hasArg()
-                .withArgName("PATH")
-                .create("a"));
-        options.addOption(OptionBuilder.withLongOpt("out")
-                .withDescription("Output prefix")
-                .hasArg()
-                .withArgName("PATH")
-                .create("o"));
-
-        options.addOption(OptionBuilder.withLongOpt("seed")
-                .withDescription("Random seed [default: 123456789]")
-                .hasArg()
-                .withArgName("LONG")
-                .create());
-
-        options.addOption(OptionBuilder.withLongOpt("perm")
-                .withDescription("Number of permutations [default: 1000]")
-                .hasArg()
-                .withArgName("INT")
-                .create());
-
-        options.addOption(OptionBuilder.withLongOpt("ciswindow")
-                .withDescription("Cis window size [default: 1mb]")
-                .withArgName("INT")
-                .hasArg()
-                .create());
-
-        options.addOption(OptionBuilder.withLongOpt("maf")
-                .withDescription("Minor allele frequency threshold [default: 0.01]")
-                .hasArg()
-                .withArgName("FLOAT")
-                .create());
-        options.addOption(OptionBuilder.withLongOpt("cr")
-                .withDescription("Call-rate threshold [default: 0.95]")
-                .hasArg()
-                .withArgName("FLOAT")
-                .create());
-        options.addOption(OptionBuilder.withLongOpt("hwep")
-                .withDescription("Hardy-Weinberg p-value threshold [default: 0.0001]")
-                .hasArg()
-                .withArgName("FLOAT")
-                .create());
-        options.addOption(OptionBuilder.withLongOpt("snpannotation")
-                .withDescription("SNP annotation file, tab separated: SNPID chr pos")
-                .hasArg()
-                .withArgName("FILE")
-                .create());
-        options.addOption(OptionBuilder.withLongOpt("minobservations")
-                .withDescription("Require at least this many observations per dataset (i.e. non-NaN genotypes/phenotypes) [default: 10]")
-                .hasArg()
-                .withArgName("FLOAT")
-                .create());
-        options.addOption(OptionBuilder.withLongOpt("norank")
-                .withDescription("Do not rank expression data")
-                .create());
-        options.addOption(OptionBuilder.withLongOpt("outputall")
-                .withDescription("Output all associations, not just top association per gene")
-                .create());
-        options.addOption(OptionBuilder.withLongOpt("outputallpermutations")
-                .withDescription("Output all permuted associations, not just top association per gene")
-                .create());
-        options.addOption(OptionBuilder.withLongOpt("snplog")
-                .withDescription("Output SNP summary stats per snp/gene pair.")
-                .create());
-        options.addOption(OptionBuilder.withLongOpt("nrdatasets")
-                .withDescription("Minimum number of datasets required in meta-analysis [default: 2]")
-                .hasArg()
-                .withArgName("INT")
-                .create());
-        options.addOption(OptionBuilder.withLongOpt("replacemissinggenotypes")
-                .withDescription("Replace missing genotypes with average genotype: use this when both genotypes and expression data have missing values and perm > 0")
-                .create());
-
-        options.addOption(OptionBuilder.withLongOpt("input")
-                .withDescription("Input file")
-                .hasArg()
-                .create());
-        options.addOption(OptionBuilder.withLongOpt("input2")
-                .withDescription("Input file 2")
-                .hasArg()
-                .create());
-        options.addOption(OptionBuilder.withLongOpt("nriters")
-                .withDescription("Nr iters to concatenate using concatconditional")
-                .hasArg()
-                .create());
-        options.addOption(OptionBuilder.withLongOpt("sortbyz")
-                .withDescription("Sort by Z-score")
-                .create());
-
-
-        options.addOption(OptionBuilder.withLongOpt("eqtlset")
-                .withDescription("[determineldgwas] - List of eQTL snps to test - txt.gz file")
-                .hasArg()
-                .withArgName("FILE")
-                .create());
-
-        options.addOption(OptionBuilder.withLongOpt("eqtlfile")
-                .withDescription("[determineldgwas] - eQTL file - txt.gz file")
-                .hasArg()
-                .withArgName("FILE")
-                .create());
-
-        options.addOption(OptionBuilder.withLongOpt("gwasset")
-                .withDescription("[determineldgwas] - List of GWAS snps to test - txt.gz file")
-                .hasArg()
-                .withArgName("FILE")
-                .create());
-
-        options.addOption(OptionBuilder.withLongOpt("gwasassocfile")
-                .withDescription("[determineldgwas] - GWAS association file - txt.gz file")
-                .hasArg()
-                .withArgName("FILE")
-                .create());
-
-        options.addOption(OptionBuilder.withLongOpt("gwaslistfile")
-                .withDescription("[determineldgwas] - GWAS study file - txt.gz file")
-                .hasArg()
-                .withArgName("FILE")
-                .create());
-
-        options.addOption(OptionBuilder.withLongOpt("prunedistance")
-                .withDescription("[determineldgwas] - Pruning distance [default: 1mb]")
-                .hasArg()
-                .withArgName("INT")
-                .create());
-
-        options.addOption(OptionBuilder.withLongOpt("prunethreshold")
-                .withDescription("[determineldgwas] - Pruning LD threshold [default: 0.2]")
-                .hasArg()
-                .withArgName("FLOAT")
-                .create());
-
-        options.addOption(OptionBuilder.withLongOpt("ldthreshold")
-                .withDescription("[determineldgwas] - LD threshold [default: 0.8]")
-                .hasArg()
-                .withArgName("FLOAT")
-                .create());
-
-        options.addOption(OptionBuilder.withLongOpt("skipchr6")
-                .withDescription("[determineldgwas] - Skip chr6 when calculating LD")
-                .create());
-
-        options.addOption(OptionBuilder.withLongOpt("matchbyrsid")
-                .withDescription("[determineldgwas] - Match by RsId in stead of full variant id")
-                .create());
-
-        options.addOption(OptionBuilder.withLongOpt("testnonparseablechr")
-                .withDescription("[mbqtl] - Test variants and genes that map to non-oarseable chromosomes (e.g. patch chromosomes)")
-                .create());
-
-        options.addOption(OptionBuilder.withLongOpt("empzmeta")
-                .withDescription("Perform fixed effects meta-analysis using legacy eQTL mapping pipeline meta-analysis method [default]")
-                .create());
-
-        options.addOption(OptionBuilder.withLongOpt("fisherzmeta")
-                .withDescription("Perform fixed effects meta-analysis using weighted fisher Z method")
-                .create());
-
-        options.addOption(OptionBuilder.withLongOpt("fisherzmetarandom")
-                .withDescription("Perform random effects meta-analysis using weighted fisher Z method")
-                .create());
-
-        options.addOption(OptionBuilder.withLongOpt("mingenotypecount")
-                .hasArg()
-                .withArgName("INT")
-                .withDescription("Minimal number of individuals per genotype group [default: 0]")
-                .create());
-
+        options.addOption("empzmeta","empzmeta",false,"Perform fixed effects meta-analysis using legacy eQTL mapping pipeline meta-analysis method [default]");
+        options.addOption("fisherzmeta","fisherzmeta",false,"Perform fixed effects meta-analysis using weighted fisher Z method");
+        options.addOption("fisherzmetarandom","fisherzmetarandom",false,"Perform random effects meta-analysis using weighted fisher Z method");
+        options.addOption("mingenotypecount","mingenotypecount",false,"Minimal number of individuals per genotype group [default: 0]");
 
         try {
-            CommandLineParser parser = new BasicParser();
+            CommandLineParser parser = new DefaultParser();
             CommandLine cmd = parser.parse(options, args);
 
             String mode = cmd.getOptionValue("mode");
@@ -358,7 +184,7 @@ public class Main {
                         prunethreshold = Double.parseDouble(cmd.getOptionValue("prunethreshold"));
                     }
                     if (cmd.hasOption("ldthreshold")) {
-                        ldthreshold = Double.parseDouble("ldthreshold");
+                        ldthreshold = Double.parseDouble(cmd.getOptionValue("ldthreshold"));
                     }
                     if (cmd.hasOption("skipchr6")) {
                         skipchr6 = true;
@@ -369,7 +195,7 @@ public class Main {
 
                     if (eqtlset == null || eqtlfile == null
                             || gwasset == null || gwasassocfile == null || gwaslistfile == null
-                            || vcf == null || gwasassocfile == null || gwasassocfile == null || gwasassocfile == null) {
+                            || vcf == null) {
                         System.out.println("Usage: --eqtlset eqtlset.txt.gz " +
                                 "--eqtlfile eqtlfile.txt.gz " +
                                 "--gwasset gwasset.txt.gz " +
@@ -664,6 +490,10 @@ public class Main {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("mbqtl.jar", options);
         } catch (IOException e) {
+            System.out.println("Failed with IOException: " + e.getMessage());
+            e.printStackTrace();
+        } catch (Exception e){
+            System.out.println("Failed with Exception: " + e.getMessage());
             e.printStackTrace();
         }
     }
