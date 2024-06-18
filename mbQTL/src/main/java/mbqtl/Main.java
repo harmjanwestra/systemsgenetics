@@ -11,12 +11,11 @@ public class Main {
 
         Options options = new Options();
 
-
-        options.addOption("m", "mode", true, "Mode: [metaqtl|mbqtl|mbqtlsingleds|mbqtlplot|regressqtl|sortfile|determineld|determineldgwas|concatconditional]");
+        options.addRequiredOption("m", "mode", true, "Mode: [metaqtl|mbqtl|mbqtlsingleds|mbqtlplot|regressqtl|sortfile|determineld|determineldgwas|concatconditional]");
         options.addOption("v", "vcf", true, "Tabix indexed VCF");
         options.addOption("e", "exp", true, "Expression matrix (can be gzipped)");
         options.addOption("eg", "expgroups", true, "File defining groups of phenotypes");
-        options.addOption("chr", true, "Chromosome number");
+        options.addOption("chr","chr", true, "Chromosome number");
         options.addOption("g", "gte", true, "Genotype to expression to dataset linkfile (tab separated)");
         options.addOption("sgl", "snpgenelimit", true, "SNP-gene limit file (one line per snp-gene combination, tab separated)");
         options.addOption("sl", "snplimit", true, "SNP limit file (one line per gene ID)");
@@ -63,6 +62,7 @@ public class Main {
             CommandLine cmd = parser.parse(options, args);
 
             String mode = cmd.getOptionValue("mode");
+
 
             String vcf = null;
             if (cmd.hasOption("vcf")) {
@@ -488,12 +488,14 @@ public class Main {
         } catch (ParseException e) {
             System.out.println("Command line parse exception: " + e.getMessage());
             HelpFormatter formatter = new HelpFormatter();
+            formatter.setWidth(160);
             formatter.printHelp("mbqtl.jar", options);
         } catch (IOException e) {
             System.out.println("Failed with IOException: " + e.getMessage());
             e.printStackTrace();
-        } catch (Exception e){
+        } catch (Exception e) {
             System.out.println("Failed with Exception: " + e.getMessage());
+            System.out.println("Probably some command line parameter was wrong. Try running java -jar MbQTL-SNAPSHOT-jar-with-dependencies.jar");
             e.printStackTrace();
         }
     }
