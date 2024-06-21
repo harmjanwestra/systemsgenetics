@@ -55,7 +55,7 @@ public class Main {
         options.addOption("empzmeta","empzmeta",false,"Perform fixed effects meta-analysis using legacy eQTL mapping pipeline meta-analysis method [default]");
         options.addOption("fisherzmeta","fisherzmeta",false,"Perform fixed effects meta-analysis using weighted fisher Z method");
         options.addOption("fisherzmetarandom","fisherzmetarandom",false,"Perform random effects meta-analysis using weighted fisher Z method");
-        options.addOption("mingenotypecount","mingenotypecount",false,"Minimal number of individuals per genotype group [default: 0]");
+        options.addOption("mingenotypecount","mingenotypecount",true,"Minimal number of individuals per genotype group [default: 0]");
 
         try {
             CommandLineParser parser = new DefaultParser();

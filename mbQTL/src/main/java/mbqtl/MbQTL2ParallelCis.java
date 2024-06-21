@@ -686,7 +686,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                                     } else {
                                         metaZ = ZScores.getWeightedZ(zscores, samplesizes);
                                         metaP = ZScores.zToP(metaZ);
-                                        if (permutation != -1) {
+                                        if (permutation == -1) {
                                             double[] betaAndSEEstimate = ZScores.zToBeta(metaZ, overallAltAlleleFreq, totalSampleSize);
                                             metaBeta = betaAndSEEstimate[0];
                                             metaBetaSE = betaAndSEEstimate[1];
@@ -745,6 +745,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                                                 topUnpermutedResult.metaBeta = metaBeta;
                                                 topUnpermutedResult.metaBetaSE = metaBetaSE;
                                                 topUnpermutedResult.snpID = variant.getId();
+                                                topUnpermutedResult.snpChr = variant.getChr();
                                                 topUnpermutedResult.snpPos = variant.getPos();
                                                 topUnpermutedResult.snpAlleles = variant.getAlleles()[0] + "/" + variant.getAlleles()[1];
                                                 topUnpermutedResult.snpEffectAllele = variant.getAlleles()[1];
@@ -756,12 +757,12 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                                             String snpEffectAllele = variant.getAlleles()[1];
 
                                             String outln = gene
-                                                    + "\t" + chromosome
+                                                    + "\t" + geneChromosomeObj.getNumber()
                                                     + "\t" + pos
                                                     + "\t" + strand
                                                     + "\t" + geneSymbol
                                                     + "\t" + variant.getId()
-                                                    + "\t" + chromosome
+                                                    + "\t" + variant.getChr()
                                                     + "\t" + variant.getPos()
                                                     + "\t" + snpAlleles
                                                     + "\t" + snpEffectAllele
@@ -866,9 +867,11 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                 int pos = geneAnnotationObj.getStart(); // .getStartPos(geneAnnotationId);
                 Strand strand = geneAnnotationObj.getStrand(); // .getStrand(geneAnnotationId);
                 String geneSymbol = geneAnnotationObj.getGeneSymbol(); // .getSymbol(geneAnnotationId);
-                String outln = topUnpermutedResult.gene + "\t" + chromosome + "\t" + pos + "\t" + strand + "\t" + geneSymbol
+                String outln = topUnpermutedResult.gene
+                        + "\t" + geneAnnotationObj.getChromosome().getNumber()
+                        + "\t" + pos + "\t" + strand + "\t" + geneSymbol
                         + "\t" + topUnpermutedResult.snpID
-                        + "\t" + chromosome
+                        + "\t" + topUnpermutedResult.snpChr
                         + "\t" + topUnpermutedResult.snpPos
                         + "\t" + topUnpermutedResult.snpAlleles
                         + "\t" + topUnpermutedResult.snpEffectAllele
@@ -971,6 +974,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
         public String snpID;
         public String snpAlleles;
         public String snpEffectAllele;
+        public String snpChr;
         public int snpPos;
         public double snpEffectAlleleFreq;
         public double[] zscores;

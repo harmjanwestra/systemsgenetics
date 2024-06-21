@@ -45,7 +45,11 @@ public class DoubleMatrixConverter {
                 String rowid = elems[0];
                 String[] finalElems = elems;
                 IntStream.range(1, elems.length).parallel().forEach(i -> {
-                    ln[i - 1] = Double.parseDouble(finalElems[i]);
+                    try {
+                        ln[i - 1] = Double.parseDouble(finalElems[i]);
+                    } catch (NumberFormatException e){
+                        ln[i - 1] = Double.NaN;
+                    }
                 });
 
                 writer.append(ln, rowid);
