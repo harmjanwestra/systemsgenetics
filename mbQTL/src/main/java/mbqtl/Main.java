@@ -9,13 +9,29 @@ public class Main {
     // todo: clean up options
     public static void main(String[] args) {
 
+//        args = new String[]{
+//                "-m", "mbqtl",
+//                "-a", "/Users/harm-jan/SyncData/TMP/orf/wb/genotypes/annotation_file_no_MT_X_Y.txt.gz",
+//                "-e", "/Users/harm-jan/SyncData/TMP/orf/wb/genotypes/exp.txt",
+//                "-g", "/Users/harm-jan/SyncData/TMP/orf/wb/genotypes/gte.txt",
+//                "-v", "/Users/harm-jan/SyncData/TMP/orf/wb/genotypes/chr1.vcf.gz",
+//                "--chr", "1",
+//                "--perm", "100",
+//                "--minobservations", "30",
+//                "-gl", "/Users/harm-jan/SyncData/TMP/orf/wb/genotypes/chr1-batch-1.txt",
+//                "--replacemissinggenotypes",
+//                "-o", "chr1-batch-1",
+//                "--mingenotypecount", "2",
+//                "--fisherzmeta"
+//        };
+
         Options options = new Options();
 
         options.addRequiredOption("m", "mode", true, "Mode: [metaqtl|mbqtl|mbqtlsingleds|mbqtlplot|regressqtl|sortfile|determineld|determineldgwas|concatconditional]");
         options.addOption("v", "vcf", true, "Tabix indexed VCF");
         options.addOption("e", "exp", true, "Expression matrix (can be gzipped)");
         options.addOption("eg", "expgroups", true, "File defining groups of phenotypes");
-        options.addOption("chr","chr", true, "Chromosome number");
+        options.addOption("chr", "chr", true, "Chromosome number");
         options.addOption("g", "gte", true, "Genotype to expression to dataset linkfile (tab separated)");
         options.addOption("sgl", "snpgenelimit", true, "SNP-gene limit file (one line per snp-gene combination, tab separated)");
         options.addOption("sl", "snplimit", true, "SNP limit file (one line per gene ID)");
@@ -49,13 +65,14 @@ public class Main {
         options.addOption("prunethreshold", "prunethreshold", true, "[determineldgwas] - Pruning LD threshold [default: 0.2]");
         options.addOption("ldthreshold", "ldthreshold", true, "[determineldgwas] - LD threshold [default: 0.8]");
         options.addOption("skipchr6", "skipchr6", false, "[determineldgwas] - Skip chr6 when calculating LD");
-        options.addOption("matchbyrsid","matchbyrsid",false,"[determineldgwas] - Match by RsId in stead of full variant id");
-        options.addOption("testnonparseablechr","testnonparseablechr",false,"[mbqtl] - Test variants and genes that map to non-oarseable chromosomes (e.g. patch chromosomes)");
+        options.addOption("matchbyrsid", "matchbyrsid", false, "[determineldgwas] - Match by RsId in stead of full variant id");
+        options.addOption("testnonparseablechr", "testnonparseablechr", false, "[mbqtl] - Test variants and genes that map to non-oarseable chromosomes (e.g. patch chromosomes)");
 
-        options.addOption("empzmeta","empzmeta",false,"Perform fixed effects meta-analysis using legacy eQTL mapping pipeline meta-analysis method [default]");
-        options.addOption("fisherzmeta","fisherzmeta",false,"Perform fixed effects meta-analysis using weighted fisher Z method");
-        options.addOption("fisherzmetarandom","fisherzmetarandom",false,"Perform random effects meta-analysis using weighted fisher Z method");
-        options.addOption("mingenotypecount","mingenotypecount",true,"Minimal number of individuals per genotype group [default: 0]");
+        options.addOption("empzmeta", "empzmeta", false, "Perform fixed effects meta-analysis using legacy eQTL mapping pipeline meta-analysis method [default]");
+        options.addOption("fisherzmeta", "fisherzmeta", false, "Perform fixed effects meta-analysis using weighted fisher Z method");
+        options.addOption("fisherzmetarandom", "fisherzmetarandom", false, "Perform random effects meta-analysis using weighted fisher Z method");
+        options.addOption("mingenotypecount", "mingenotypecount", true, "Minimal number of individuals per genotype group [default: 0]");
+        options.addOption("splitmultiallelic", "splitmultiallelic", false, "Split multi allelic variants [default: skip multi allelic variants].");
 
         try {
             CommandLineParser parser = new DefaultParser();
@@ -117,7 +134,7 @@ public class Main {
                 case "concatconditional":
                     Integer nriters = null;
                     if (cmd.hasOption("nriters")) {
-                        nriters = Integer.parseInt(cmd.getOptionValue("nriters"));
+                        nriters = (Integer) Integer.parseInt(cmd.getOptionValue("nriters"));
                     }
                     if (input == null || vcf == null || linkfile == null || nriters == null || output == null) {
                         System.out.println("Usage: --input qtlfilestr --vcf vcffile.vcf.gz --out output --gte samplelinkfile.txt --nriters nriters ");
@@ -340,6 +357,9 @@ public class Main {
                         if (cmd.hasOption("hwep")) {
                             double t = Double.parseDouble(cmd.getOptionValue("hwep"));
                             bpp.setHwepthreshold(t);
+                        }
+                        if(cmd.hasOption("splitmultiallelic")){
+                            bpp.setSplitMultiAllelic();
                         }
 
                         if (cmd.hasOption("nrdatasets")) {

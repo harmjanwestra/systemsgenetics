@@ -43,6 +43,7 @@ public class QTLAnalysis {
     protected int minNumberOfDatasets = 2;
     protected int minObservations = 10;
     protected SNPAnnotation snpAnnotation = null;
+    protected boolean splitMultiAllelics = false;
 
     public QTLAnalysis(String vcfFile,
                        int chromosome,
@@ -452,18 +453,18 @@ public class QTLAnalysis {
         obj.cr = called;
         obj.hwep = hwep;
         obj.passqc = false;
-		boolean passAlleleCount = false;
+        boolean passAlleleCount = false;
         if (this.minGenotypeCount > 0) {
             if (obsAA >= minGenotypeCount && obsAB >= minGenotypeCount && obsBB >= minGenotypeCount) {
-				passAlleleCount = true;
+                passAlleleCount = true;
             }
         } else {
-			if(((obsAA > 0 && obsAB > 0) || (obsAB > 0 && obsBB > 0) || (obsAA > 0 && obsBB > 0))){
-				passAlleleCount = true;
-			}
-		}
+            if (((obsAA > 0 && obsAB > 0) || (obsAB > 0 && obsBB > 0) || (obsAA > 0 && obsBB > 0))) {
+                passAlleleCount = true;
+            }
+        }
 
-        obj.passqc = passAlleleCount &&  (maf >= mafthreshold && called >= callratethreshold && hwep >= hwepthreshold);
+        obj.passqc = passAlleleCount && (maf >= mafthreshold && called >= callratethreshold && hwep >= hwepthreshold);
         return obj;
     }
 
@@ -517,6 +518,9 @@ public class QTLAnalysis {
     }
 
     protected double[] getGenotype(byte[] genotypesAsByteVector) {
+        if (genotypesAsByteVector == null) {
+            return null;
+        }
         double[] genotypes = new double[genotypesAsByteVector.length];
         for (int d = 0; d < genotypes.length; d++) {
             genotypes[d] = genotypesAsByteVector[d];
@@ -557,4 +561,7 @@ public class QTLAnalysis {
     }
 
 
+    public void setSplitMultiAllelic() {
+        this.splitMultiAllelics = true;
+    }
 }

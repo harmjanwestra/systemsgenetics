@@ -119,6 +119,8 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
         System.out.println("Replacing missing genotypes: " + replaceMissingGenotypes);
         System.out.println("Min observations: " + minObservations);
         System.out.println("Min genotype count:\t" + minGenotypeCount);
+        System.out.println("Splitting multi allelic variants:\t" + splitMultiAllelics);
+        System.out.println("Skipping multi allelic variants:\t" + (!splitMultiAllelics));
         System.out.println("Writing all snp/feature pairs: " + outputAll);
         System.out.println("Writing SNP log: " + outputSNPLog);
         System.out.println("Writing all permutations: " + dumpPermutationPvalues);
@@ -421,8 +423,25 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                 // TODO: can the VCF parsing be cached somehow?
 
                 while (snpIterator != null && snpIterator.hasNext()) {
-                    VCFVariant variant = snpIterator.next();
-                    if (variant != null) {
+                    VCFVariant variantTmp = snpIterator.next();
+
+//                    String variantId2 = variantTmp.getId();
+//                    if (variantId2.equals("rs779116082;rs745987535")) {
+//                        System.out.println("Got it!");
+//                        splitMultiAllelics = true;
+//                    }
+
+
+                    ArrayList<VCFVariant> variants = new ArrayList<>();
+                    if (variantTmp != null) {
+                        if (!variantTmp.isMultiallelic()) {
+                            variants.add(variantTmp);
+                        } else if (splitMultiAllelics) {
+                            variants = variantTmp.splitMultiAllelic();
+                        }
+                    }
+
+                    for (VCFVariant variant : variants) {
                         String variantId = variant.getId();
                         uniqueSNPIDs.add(variantId);
                         if ((snpLimitSet == null || snpLimitSet.contains(variantId)) ||
