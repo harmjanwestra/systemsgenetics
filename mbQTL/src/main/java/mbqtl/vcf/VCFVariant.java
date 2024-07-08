@@ -1179,11 +1179,12 @@ public class VCFVariant {
                     minorAllele = alleles[0];
                 }
             }
-            if (nrAllelesThatHaveAlleleFrequency == 2) {
+            if (alleles.length == 2) {
                 biallelic = true;
-            } else if (nrAllelesThatHaveAlleleFrequency > 2) {
+            } else if (alleles.length > 2) {
                 multiallelic = true;
-            } else {
+            }
+            if (nrAllelesThatHaveAlleleFrequency == 0) {
                 monomorphic = true;
             }
             calculateHWEP();
