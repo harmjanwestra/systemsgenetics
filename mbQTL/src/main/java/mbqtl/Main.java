@@ -6,24 +6,7 @@ import java.io.IOException;
 
 public class Main {
 
-    // todo: clean up options
     public static void main(String[] args) {
-
-//        args = new String[]{
-//                "-m", "mbqtl",
-//                "-a", "/Users/harm-jan/SyncData/TMP/orf/wb/genotypes/annotation_file_no_MT_X_Y.txt.gz",
-//                "-e", "/Users/harm-jan/SyncData/TMP/orf/wb/genotypes/exp.txt",
-//                "-g", "/Users/harm-jan/SyncData/TMP/orf/wb/genotypes/gte.txt",
-//                "-v", "/Users/harm-jan/SyncData/TMP/orf/wb/genotypes/chr1.vcf.gz",
-//                "--chr", "1",
-//                "--perm", "100",
-//                "--minobservations", "30",
-//                "-gl", "/Users/harm-jan/SyncData/TMP/orf/wb/genotypes/chr1-batch-1.txt",
-//                "--replacemissinggenotypes",
-//                "-o", "chr1-batch-1",
-//                "--mingenotypecount", "2",
-//                "--fisherzmeta"
-//        };
 
         Options options = new Options();
 
@@ -67,7 +50,6 @@ public class Main {
         options.addOption("skipchr6", "skipchr6", false, "[determineldgwas] - Skip chr6 when calculating LD");
         options.addOption("matchbyrsid", "matchbyrsid", false, "[determineldgwas] - Match by RsId in stead of full variant id");
         options.addOption("testnonparseablechr", "testnonparseablechr", false, "[mbqtl] - Test variants and genes that map to non-oarseable chromosomes (e.g. patch chromosomes)");
-
         options.addOption("empzmeta", "empzmeta", false, "Perform fixed effects meta-analysis using legacy eQTL mapping pipeline meta-analysis method [default]");
         options.addOption("fisherzmeta", "fisherzmeta", false, "Perform fixed effects meta-analysis using weighted fisher Z method");
         options.addOption("fisherzmetarandom", "fisherzmetarandom", false, "Perform random effects meta-analysis using weighted fisher Z method");

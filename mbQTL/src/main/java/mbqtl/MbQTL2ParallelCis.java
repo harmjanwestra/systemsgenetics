@@ -425,20 +425,27 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                 while (snpIterator != null && snpIterator.hasNext()) {
                     VCFVariant variantTmp = snpIterator.next();
 
-//                    String variantId2 = variantTmp.getId();
-//                    if (variantId2.equals("rs779116082;rs745987535")) {
-//                        System.out.println("Got it!");
-//                        splitMultiAllelics = true;
-//                    }
 
 
-                    ArrayList<VCFVariant> variants = new ArrayList<>();
+
+                    ArrayList<VCFVariant> variants;
                     if (variantTmp != null) {
+//                        String variantId2 = variantTmp.getId();
+//                        if (variantId2.equals("rs779116082;rs745987535")) {
+//                            System.out.println("Got it!");
+//                            splitMultiAllelics = true;
+//                        }
+
                         if (!variantTmp.isMultiallelic()) {
+                            variants = new ArrayList<>();
                             variants.add(variantTmp);
                         } else if (splitMultiAllelics) {
                             variants = variantTmp.splitMultiAllelic();
+                        } else {
+                            variants = new ArrayList<>();
                         }
+                    } else {
+                        variants = new ArrayList<>();
                     }
 
                     for (VCFVariant variant : variants) {
@@ -456,6 +463,9 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                             VariantQCObj[] qcobjs = new VariantQCObj[datasets.length];
                             IntStream.range(0, datasets.length).forEach(d -> {
                                 Dataset thisDataset = datasets[d];
+//                                if (dosages == null || genotypes == null) {
+//                                    System.out.println("Error? " + variant.getId() + "\t" + variants.size());
+//                                }
                                 dosagesPerDataset[d] = thisDataset.select(dosages, thisDataset.getGenotypeIds()); // select required dosages
                                 genotypesPerDataset[d] = thisDataset.select(genotypes, thisDataset.getGenotypeIds()); // select required genotype IDs
 
