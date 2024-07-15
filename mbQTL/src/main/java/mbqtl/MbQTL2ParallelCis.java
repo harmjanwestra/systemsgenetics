@@ -426,8 +426,6 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                     VCFVariant variantTmp = snpIterator.next();
 
 
-
-
                     ArrayList<VCFVariant> variants;
                     if (variantTmp != null) {
 //                        String variantId2 = variantTmp.getId();
@@ -455,18 +453,25 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                                 (snpGeneLimitSet == null || (snpGeneLimitSet.containsKey(gene) && snpGeneLimitSet.get(gene).contains(variantId)))
                         ) {
                             final double[] genotypes = getGenotype(variant.getGenotypesAsByteVector());
-                            final double[] dosages = getDosage(variant.getDosage());
+                            double[] dosages = null;
+                            if (useHardGenotypeCalls) {
+                                dosages = getGenotype(variant.getGenotypesAsByteVector());
+                            } else {
+                                dosages = getDosage(variant.getDosage());
+                            }
+
 
                             // split genotype data per dataset, perform QC
                             double[][] genotypesPerDataset = new double[datasets.length][];
                             double[][] dosagesPerDataset = new double[datasets.length][];
                             VariantQCObj[] qcobjs = new VariantQCObj[datasets.length];
+                            double[] finalDosages = dosages;
                             IntStream.range(0, datasets.length).forEach(d -> {
                                 Dataset thisDataset = datasets[d];
 //                                if (dosages == null || genotypes == null) {
 //                                    System.out.println("Error? " + variant.getId() + "\t" + variants.size());
 //                                }
-                                dosagesPerDataset[d] = thisDataset.select(dosages, thisDataset.getGenotypeIds()); // select required dosages
+                                dosagesPerDataset[d] = thisDataset.select(finalDosages, thisDataset.getGenotypeIds()); // select required dosages
                                 genotypesPerDataset[d] = thisDataset.select(genotypes, thisDataset.getGenotypeIds()); // select required genotype IDs
 
                                 VariantQCObj qcobj = checkVariant(genotypesPerDataset[d]);

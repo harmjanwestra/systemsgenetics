@@ -55,6 +55,7 @@ public class Main {
         options.addOption("fisherzmetarandom", "fisherzmetarandom", false, "Perform random effects meta-analysis using weighted fisher Z method");
         options.addOption("mingenotypecount", "mingenotypecount", true, "Minimal number of individuals per genotype group [default: 0]");
         options.addOption("splitmultiallelic", "splitmultiallelic", false, "Split multi allelic variants [default: skip multi allelic variants].");
+        options.addOption("usehardgenotypecalls", "usehardgenotypecalls", false, "Use hard genotype calls in stead of dosages derived from genotype probabilities. [default: use dosages if available]");
 
         try {
             CommandLineParser parser = new DefaultParser();
@@ -340,9 +341,7 @@ public class Main {
                             double t = Double.parseDouble(cmd.getOptionValue("hwep"));
                             bpp.setHwepthreshold(t);
                         }
-                        if(cmd.hasOption("splitmultiallelic")){
-                            bpp.setSplitMultiAllelic();
-                        }
+
 
                         if (cmd.hasOption("nrdatasets")) {
                             int t = Integer.parseInt(cmd.getOptionValue("nrdatasets"));
@@ -442,6 +441,14 @@ public class Main {
                         if (cmd.hasOption("mingenotypecount")) {
                             int mingenotypecount = Integer.parseInt(cmd.getOptionValue("mingenotypecount"));
                             bQTL.setMinGenotypeCount(mingenotypecount);
+                        }
+
+                        if (cmd.hasOption("splitmultiallelic")) {
+                            bQTL.setSplitMultiAllelic();
+                        }
+
+                        if (cmd.hasOption("usehardgenotypecalls")) {
+                            bQTL.setUseHardGenotypeCalls();
                         }
 
                         bQTL.run();

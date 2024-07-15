@@ -44,6 +44,7 @@ public class QTLAnalysis {
     protected int minObservations = 10;
     protected SNPAnnotation snpAnnotation = null;
     protected boolean splitMultiAllelics = false;
+    protected boolean useHardGenotypeCalls = false;
 
     public QTLAnalysis(String vcfFile,
                        int chromosome,
@@ -563,5 +564,9 @@ public class QTLAnalysis {
 
     public void setSplitMultiAllelic() {
         this.splitMultiAllelics = true;
+    }
+
+    public void setUseHardGenotypeCalls() {
+        this.useHardGenotypeCalls = true;
     }
 }
