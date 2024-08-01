@@ -4,6 +4,7 @@ import mbqtl.datastructures.Dataset;
 import mbqtl.datastructures.GeneAnnotation;
 import mbqtl.datastructures.GeneExpressionData;
 import mbqtl.datastructures.SNPAnnotation;
+import mbqtl.enums.AnalysisType;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
@@ -45,6 +46,7 @@ public class QTLAnalysis {
     protected SNPAnnotation snpAnnotation = null;
     protected boolean splitMultiAllelics = false;
     protected boolean useHardGenotypeCalls = false;
+    protected AnalysisType analysisType = AnalysisType.CIS;
 
     public QTLAnalysis(String vcfFile,
                        int chromosome,
@@ -247,7 +249,7 @@ public class QTLAnalysis {
     }
 
     public void loadSNPAnnotation(String snpannotation) throws IOException {
-        snpAnnotation = new SNPAnnotation(snpannotation);
+        snpAnnotation = new SNPAnnotation(snpannotation, snpLimitSet);
     }
 
     protected void updateDatasets(String vcfFile) throws IOException {
@@ -325,19 +327,24 @@ public class QTLAnalysis {
         }
 
         int nrDatasetsWithData = 0;
-        for (int d = 0; d < datasets.size(); d++) {
-            if (!datasets.get(d).isEmpty()) {
+        for (Dataset dataset : datasets) {
+            if (dataset.size() >= minObservations) {
                 nrDatasetsWithData++;
             } else {
-                System.out.println(datasets.get(d).getName() + " has no data!");
+                System.out.println(dataset.getName() + " does not have enough samples: " + dataset.size() + " found, " + minObservations + " required.");
             }
+        }
+
+        if (nrDatasetsWithData == 0) {
+            System.out.println("Error: none of the defined datasets have enough samples. Set another minimum with --minobservations");
+            System.exit(-1);
         }
 
         Dataset[] output = new Dataset[nrDatasetsWithData];
         int dctr = 0;
-        for (int d = 0; d < datasets.size(); d++) {
-            if (!datasets.get(d).isEmpty()) {
-                output[dctr] = datasets.get(d);
+        for (Dataset dataset : datasets) {
+            if (!dataset.isEmpty() && dataset.size() >= minObservations) {
+                output[dctr] = dataset;
                 dctr++;
             }
         }
@@ -568,5 +575,9 @@ public class QTLAnalysis {
 
     public void setUseHardGenotypeCalls() {
         this.useHardGenotypeCalls = true;
+    }
+
+    public void setAnalysisType(AnalysisType analysisType) {
+        this.analysisType = analysisType;
     }
 }

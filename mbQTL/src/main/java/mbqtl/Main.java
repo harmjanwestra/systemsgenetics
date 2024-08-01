@@ -1,5 +1,7 @@
 package mbqtl;
 
+import mbqtl.enums.AnalysisType;
+import mbqtl.enums.MetaAnalysisMethod;
 import org.apache.commons.cli.*;
 
 import java.io.IOException;
@@ -24,6 +26,9 @@ public class Main {
         options.addOption("seed", "seed", true, "Random seed [default: 123456789]");
         options.addOption("perm", "perm", true, "Number of permutations [default: 1000]");
         options.addOption("ciswindow", "ciswindow", true, "Cis window size [default: 1mb]");
+        options.addOption("cis", "cis", false, "Perform cis-QTL analysis (default)");
+        options.addOption("trans", "trans", false, "Perform trans-QTL analysis (exclude variants in cis-window)");
+        options.addOption("cistrans", "cistrans", false, "Perform cis+trans-QTL analysis (test all variants)");
         options.addOption("maf", "maf", true, "Minor allele frequency threshold [default: 0.01]");
         options.addOption("cr", "cr", true, "Call-rate threshold [default: 0.95]");
         options.addOption("hwep", "hwep", true, "Hardy-Weinberg p-value threshold [default: 0.0001]");
@@ -90,6 +95,9 @@ public class Main {
             }
             String snpgenelimit = null;
             if (cmd.hasOption("snpgenelimit")) {
+                if (!cmd.hasOption("snpannotation")) {
+                    System.out.println("Suggestion: you can also specify --snpannotation when using --snpgenelimit for additional performance if you are interested in few snps/variants.");
+                }
                 snpgenelimit = cmd.getOptionValue("snpgenelimit");
             }
 
@@ -365,7 +373,7 @@ public class Main {
                         System.out.println("Gene expression: " + genexpression);
                         System.out.println("Output: " + output);
                     } else {
-                        MbQTL2ParallelCis bQTL = new MbQTL2ParallelCis(vcf, chrom, linkfile, snplimit, genelimit, snpgenelimit, genexpression, geneannotation, output);
+                        MbQTL2Parallel bQTL = new MbQTL2Parallel(vcf, chrom, linkfile, snplimit, genelimit, snpgenelimit, genexpression, geneannotation, output);
                         if (cmd.hasOption("snpannotation")) {
                             bQTL.loadSNPAnnotation(cmd.getOptionValue("snpannotation"));
                         }
@@ -429,13 +437,19 @@ public class Main {
                         }
 
                         if (cmd.hasOption("empzmeta")) {
-                            bQTL.setMetaanalysismethod(MbQTL2ParallelCis.METAANALYSISMETHOD.EMP);
+                            bQTL.setMetaanalysismethod(MetaAnalysisMethod.EMP);
                         }
                         if (cmd.hasOption("fisherzmeta")) {
-                            bQTL.setMetaanalysismethod(MbQTL2ParallelCis.METAANALYSISMETHOD.FISHERZFIXED);
+                            bQTL.setMetaanalysismethod(MetaAnalysisMethod.FISHERZFIXED);
                         }
                         if (cmd.hasOption("fisherzmetarandom")) {
-                            bQTL.setMetaanalysismethod(MbQTL2ParallelCis.METAANALYSISMETHOD.FISHERZRANDOM);
+                            bQTL.setMetaanalysismethod(MetaAnalysisMethod.FISHERZRANDOM);
+                        }
+
+                        if (cmd.hasOption("trans")) {
+                            bQTL.setAnalysisType(AnalysisType.TRANS);
+                        } else if (cmd.hasOption("cistrans")) {
+                            bQTL.setAnalysisType(AnalysisType.CISTRANS);
                         }
 
                         if (cmd.hasOption("mingenotypecount")) {

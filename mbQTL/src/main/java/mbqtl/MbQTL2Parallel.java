@@ -5,8 +5,9 @@ import mbqtl.stat.BetaDistributionMLE;
 import mbqtl.stat.FisherWeightedMetaAnalysis;
 import mbqtl.stat.PVal;
 import mbqtl.stat.RankArray;
-import mbqtl.vcf.VCFTabix;
 import mbqtl.vcf.VCFVariant;
+import mbqtl.vcf.VCFVariantProvider;
+import mbqtl.enums.*;
 import umcg.genetica.console.ProgressBar;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.enums.Chromosome;
@@ -14,6 +15,7 @@ import umcg.genetica.enums.Strand;
 import umcg.genetica.features.Feature;
 import umcg.genetica.features.FeatureComparator;
 import umcg.genetica.features.Gene;
+import umcg.genetica.features.SNPFeature;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.stats.Correlation;
 import umcg.genetica.math.stats.Descriptives;
@@ -30,8 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
-public class MbQTL2ParallelCis extends QTLAnalysis {
-
+public class MbQTL2Parallel extends QTLAnalysis {
 
     DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.US);
     private DecimalFormat dfDefault = new DecimalFormat("#.######", symbols);
@@ -44,11 +45,10 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
     private boolean outputSNPLog = false;
     private boolean replaceMissingGenotypes = false;
     private boolean dumpPermutationPvalues = false;
-    private ANALYSISTYPE analysisType = ANALYSISTYPE.CIS;
     private boolean testNonParseableChr = false;
-    private METAANALYSISMETHOD metaanalysismethod = METAANALYSISMETHOD.EMP;
+    private MetaAnalysisMethod metaanalysismethod = MetaAnalysisMethod.EMP;
 
-    public MbQTL2ParallelCis(String vcfFile, int chromosome, String linkfile, String snpLimitFile, String geneLimitFile, String snpGeneLimitFile, String geneExpressionDataFile, String geneAnnotationFile, String outfile) throws IOException {
+    public MbQTL2Parallel(String vcfFile, int chromosome, String linkfile, String snpLimitFile, String geneLimitFile, String snpGeneLimitFile, String geneExpressionDataFile, String geneAnnotationFile, String outfile) throws IOException {
         super(vcfFile, chromosome, linkfile, snpLimitFile, geneLimitFile, snpGeneLimitFile, geneExpressionDataFile, geneAnnotationFile, outfile);
         if (datasets.length < minNumberOfDatasets) {
             System.out.println(minNumberOfDatasets + " datasets required, but only " + datasets.length + " datasets defined. Changing setting to: " + datasets.length);
@@ -88,7 +88,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
         this.replaceMissingGenotypes = replaceMissingGenotypes;
     }
 
-    public void setMetaanalysismethod(METAANALYSISMETHOD method) {
+    public void setMetaanalysismethod(MetaAnalysisMethod method) {
         this.metaanalysismethod = method;
     }
 
@@ -111,6 +111,10 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
         System.out.println("Call-rate:\t" + callratethreshold);
         System.out.println("HWE-P:\t" + hwepthreshold);
         System.out.println("Min nr datasets:\t" + minNumberOfDatasets);
+        if (analysisType != AnalysisType.CIS && nrPermutations > 0) {
+            nrPermutations = 0;
+            System.out.println("Notice: Setting number of permutations to 0, since permutations are not implemented for trans-QTL analysis.");
+        }
         System.out.println("Nr Permutations:\t" + nrPermutations);
         System.out.println("Cis window:\t" + cisWindow);
         System.out.println("Random randomSeed:\t" + randomSeed);
@@ -125,6 +129,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
         System.out.println("Writing SNP log: " + outputSNPLog);
         System.out.println("Writing all permutations: " + dumpPermutationPvalues);
         System.out.println("Meta-analysis method:\t" + metaanalysismethod);
+        System.out.println("Analysis type:\t" + analysisType);
         System.out.println();
 
         Chromosome chromosomeObj = Chromosome.parseChr("" + chromosome);
@@ -152,7 +157,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
         // initialize output
 
         TextFile outTopFx = new TextFile(outputPrefix + "-TopEffects.txt", TextFile.W);
-        String[] headerTopFx = new String[26];
+        String[] headerTopFx = new String[27];
         headerTopFx[0] = "Gene";
         headerTopFx[1] = "GeneChr";
         headerTopFx[2] = "GenePos";
@@ -164,28 +169,31 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
         headerTopFx[8] = "SNPAlleles";
         headerTopFx[9] = "SNPEffectAllele";
         headerTopFx[10] = "SNPEffectAlleleFreq";
-        headerTopFx[11] = "MetaP";
-        headerTopFx[12] = "MetaPN";
-        headerTopFx[13] = "MetaPZ";
-        headerTopFx[14] = "MetaBeta";
-        headerTopFx[15] = "MetaSE";
-        headerTopFx[16] = "MetaI2";
-        headerTopFx[17] = "NrDatasets";
-        headerTopFx[18] = "DatasetCorrelationCoefficients(" + datasetstr + ")";
-        headerTopFx[19] = "DatasetZScores(" + datasetstr + ")";
-        headerTopFx[20] = "DatasetSampleSizes(" + datasetstr + ")";
-        headerTopFx[21] = "NrTestedSNPs";
-        headerTopFx[22] = "ProportionBetterPermPvals";
-        headerTopFx[23] = "BetaDistAlpha";
-        headerTopFx[24] = "BetaDistBeta";
-        headerTopFx[25] = "BetaAdjustedMetaP";
-        if (metaanalysismethod == METAANALYSISMETHOD.FISHERZFIXED || metaanalysismethod == METAANALYSISMETHOD.FISHERZRANDOM) {
-            headerTopFx[14] = "MetaR";
-            headerTopFx[19] = "DatasetFisherZ(" + datasetstr + ")";
-            if (metaanalysismethod == METAANALYSISMETHOD.FISHERZRANDOM) {
-                headerTopFx[11] += "-Random";
-                headerTopFx[14] += "-Random";
-                headerTopFx[19] += "-Random";
+        headerTopFx[11] = "QTLType";
+        headerTopFx[12] = "MetaP";
+        headerTopFx[13] = "MetaPN";
+        headerTopFx[14] = "MetaPZ";
+        headerTopFx[15] = "MetaBeta";
+        headerTopFx[16] = "MetaSE";
+        headerTopFx[17] = "MetaI2";
+        headerTopFx[18] = "NrDatasets";
+        headerTopFx[19] = "DatasetCorrelationCoefficients(" + datasetstr + ")";
+        headerTopFx[20] = "DatasetZScores(" + datasetstr + ")";
+        headerTopFx[21] = "DatasetSampleSizes(" + datasetstr + ")";
+        headerTopFx[22] = "NrTestedSNPs";
+        headerTopFx[23] = "ProportionBetterPermPvals";
+        headerTopFx[24] = "BetaDistAlpha";
+        headerTopFx[25] = "BetaDistBeta";
+        headerTopFx[26] = "BetaAdjustedMetaP";
+
+
+        if (metaanalysismethod == MetaAnalysisMethod.FISHERZFIXED || metaanalysismethod == MetaAnalysisMethod.FISHERZRANDOM) {
+            headerTopFx[15] = "MetaR";
+            headerTopFx[20] = "DatasetFisherZ(" + datasetstr + ")";
+            if (metaanalysismethod == MetaAnalysisMethod.FISHERZRANDOM) {
+                headerTopFx[12] += "-Random";
+                headerTopFx[15] += "-Random";
+                headerTopFx[20] += "-Random";
             }
         }
         String headerTopFxStr = Strings.concat(headerTopFx, Strings.tab);
@@ -197,37 +205,8 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
         if (outputAll) {
             outAll = new TextFile(outputPrefix + "-AllEffects.txt.gz", TextFile.W);
 //            String headerAll = "Gene\tGeneSymbol\tSNP\tSNPAlleles\tSNPEffectAllele\tMetaP\tMetaPN\tMetaPZ\tMetaBeta\tMetaSE\tNrDatasets\tProportionBetterPermPvals\tBetaAdjustedMetaP";
-            String[] headerAll = new String[21];
-            headerAll[0] = "Gene";
-            headerAll[1] = "GeneChr";
-            headerAll[2] = "GenePos";
-            headerAll[3] = "GeneStrand";
-            headerAll[4] = "GeneSymbol";
-            headerAll[5] = "SNP";
-            headerAll[6] = "SNPChr";
-            headerAll[7] = "SNPPos";
-            headerAll[8] = "SNPAlleles";
-            headerAll[9] = "SNPEffectAllele";
-            headerAll[10] = "SNPEffectAlleleFreq";
-            headerAll[11] = "MetaP";
-            headerAll[12] = "MetaPN";
-            headerAll[13] = "MetaPZ";
-            headerAll[14] = "MetaBeta";
-            headerAll[15] = "MetaSE";
-            headerAll[16] = "MetaI2";
-            headerAll[17] = "NrDatasets";
-            headerAll[18] = "DatasetCorrelationCoefficients(" + datasetstr + ")";
-            headerAll[19] = "DatasetZScores(" + datasetstr + ")";
-            headerAll[20] = "DatasetSampleSizes(" + datasetstr + ")";
-            if (metaanalysismethod == METAANALYSISMETHOD.FISHERZFIXED || metaanalysismethod == METAANALYSISMETHOD.FISHERZRANDOM) {
-                headerAll[14] = "MetaR";
-                headerAll[19] = "DatasetFisherZ(" + datasetstr + ")";
-                if (metaanalysismethod == METAANALYSISMETHOD.FISHERZRANDOM) {
-                    headerAll[11] += "-Random";
-                    headerAll[14] += "-Random";
-                    headerAll[19] += "-Random";
-                }
-            }
+            String[] headerAll = new String[22];
+            System.arraycopy(headerTopFx, 0, headerAll, 0, headerAll.length);
             String headerAllStr = Strings.concat(headerAll, Strings.tab);
             if (geneGroups != null) {
                 headerAllStr = "Group\t" + headerAllStr;
@@ -270,6 +249,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
         TextFile finalSnplogout = snplogout;
         TextFile finalOutAll1 = outAll;
         TextFile finalPermutationoutput = permutationoutput;
+
         if (geneGroups != null) {
             ProgressBar pb = new ProgressBar(geneGroups.size(), "Processing " + geneGroups.size() + " groups of genes...");
 
@@ -340,6 +320,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
         final UnpermutedResult topUnpermutedResult = new UnpermutedResult(); // this is safe, because values are only changed once per SNP, when permutation == -1
 
         int nrTestsPerformed = 0;
+        int snpsParsed = 0;
 
         // todo: check if the genes in the group are in the same genomic location
         // if so, variants can be cached, which will save some disk and parsing overhead
@@ -392,58 +373,79 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
 //                    System.exit(0);
 
                 Set<String> snpLimitSetForGene = snpLimitSet;
+                ArrayList<SNPFeature> snpLimitSetForGeneFeatures = null;
                 if (snpGeneLimitSet != null) {
                     snpLimitSetForGene = snpGeneLimitSet.get(gene);
                 }
-
-
-                Iterator<VCFVariant> snpIterator = null;
-                VCFTabix tabix = null;
-                try {
-                    if (analysisType == ANALYSISTYPE.CIS) {
-                        // replace vcf file with the one from the actual chromosome, if CHR template has been provided.
-                        if (geneChromosomeObj.getNumber() != prevchr && origvcfFile.contains("CHR")) {
-                            // Note: code below is not correct, because it overwrites datasets that are outside of scope of the thread that runs this code
-                            // can cause race conditions!!!!
-                            String actualVCFFile = origvcfFile.replace("CHR", "" + geneChromosomeObj.getNumber());
-//						updateDatasets(actualVCFFile); // assume the order of samples is equal across files, for now...
-                            tabix = new VCFTabix(actualVCFFile);
-                            prevchr = geneChromosomeObj.getNumber();
-                        } else {
-                            tabix = new VCFTabix(vcfFile);
+                if (snpLimitSetForGene != null && snpAnnotation != null) {
+                    snpLimitSetForGeneFeatures = new ArrayList<>();
+                    for (String snp : snpLimitSetForGene) {
+                        Integer snpid = snpAnnotation.getId(snp);
+                        if (snpid != null) {
+                            int snppos = snpAnnotation.getPos(snpid);
+                            Chromosome snpchr = snpAnnotation.getChr(snpid);
+                            SNPFeature f = new SNPFeature(snpchr, snppos, pos + 1);
+                            f.setName(snp);
+                            snpLimitSetForGeneFeatures.add(f);
                         }
-                        snpIterator = tabix.getVariants(cisRegion, genotypeSamplesToInclude, snpLimitSetForGene);
-                    } else {
-                        // TODO: NOT IMPLEMENTED YET
                     }
-                } catch (ArrayIndexOutOfBoundsException e) {
-                    System.out.println("Error querying variants for gene: " + gene + " - " + geneSymbol + " - Located on: " + geneChromosomeObj.toString() + " - " + start + " - " + stop);
+                    Collections.sort(snpLimitSetForGeneFeatures, new FeatureComparator()); // sort by position
                 }
 
+                VCFVariantProvider snpIterator = new VCFVariantProvider(cisRegion, analysisType, origvcfFile, genotypeSamplesToInclude, snpLimitSetForGene, snpLimitSetForGeneFeatures);
+//                Iterator<VCFVariant> snpIterator = variantProvider.provide();
+
+//                Iterator<VCFVariant> snpIterator = null;
+//                VCFTabix tabix = null;
+//                try {
+//                    if (analysisType == AnalysisType.CIS) {
+//                        // replace vcf file with the one from the actual chromosome, if CHR template has been provided.
+//                        if (geneChromosomeObj.getNumber() != prevchr && origvcfFile.contains("CHR")) {
+//                            // Note: code below is not correct, because it overwrites datasets that are outside of scope of the thread that runs this code
+//                            // can cause race conditions!!!!
+//                            String actualVCFFile = origvcfFile.replace("CHR", "" + geneChromosomeObj.getNumber());
+////						updateDatasets(actualVCFFile); // assume the order of samples is equal across files, for now...
+//                            tabix = new VCFTabix(actualVCFFile);
+//                            prevchr = geneChromosomeObj.getNumber();
+//                        } else {
+//                            tabix = new VCFTabix(vcfFile);
+//                        }
+//                        snpIterator = tabix.getVariants(cisRegion, genotypeSamplesToInclude, snpLimitSetForGene);
+//                    } else {
+//                        // TODO: NOT IMPLEMENTED YET
+//                    }
+//                } catch (ArrayIndexOutOfBoundsException e) {
+//                    System.out.println("Error querying variants for gene: " + gene + " - " + geneSymbol + " - Located on: " + geneChromosomeObj.toString() + " - " + start + " - " + stop);
+//                }
+//
+//
                 // TODO: can the VCF parsing be cached somehow?
-
                 while (snpIterator != null && snpIterator.hasNext()) {
+                    snpsParsed++;
+                    if (analysisType == AnalysisType.TRANS || analysisType == AnalysisType.CISTRANS) {
+                        if (snpsParsed % 100000 == 0) {
+                            System.out.println(gene + "\t" + snpsParsed + " SNPs parsed, " + nrTestsPerformed + " tests performed.");
+                        }
+                    }
                     VCFVariant variantTmp = snpIterator.next();
-
-
-                    ArrayList<VCFVariant> variants;
+                    boolean isTransVariant = false;
+                    if ( (analysisType == AnalysisType.TRANS || analysisType == AnalysisType.CISTRANS) && variantTmp != null) {
+                        isTransVariant = (!cisRegion.overlaps(variantTmp.asFeature()));
+                    }
+                    ArrayList<VCFVariant> variants = new ArrayList<>();
                     if (variantTmp != null) {
 //                        String variantId2 = variantTmp.getId();
 //                        if (variantId2.equals("rs779116082;rs745987535")) {
 //                            System.out.println("Got it!");
 //                            splitMultiAllelics = true;
 //                        }
-
-                        if (!variantTmp.isMultiallelic()) {
-                            variants = new ArrayList<>();
-                            variants.add(variantTmp);
-                        } else if (splitMultiAllelics) {
-                            variants = variantTmp.splitMultiAllelic();
-                        } else {
-                            variants = new ArrayList<>();
+                        if (analysisType != AnalysisType.TRANS || isTransVariant) {
+                            if (!variantTmp.isMultiallelic()) {
+                                variants.add(variantTmp);
+                            } else if (splitMultiAllelics) {
+                                variants = variantTmp.splitMultiAllelic();
+                            }
                         }
-                    } else {
-                        variants = new ArrayList<>();
                     }
 
                     for (VCFVariant variant : variants) {
@@ -516,10 +518,11 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                                 Arrays.fill(permutationPvalsForSNP, 1);
                             }
                             double[] finalPermutationPvalsForSNP = permutationPvalsForSNP;
+                            boolean finalIsTransVariant = isTransVariant;
                             IntStream.range(-1, nrPermutations).forEach(permutation -> {
                                 FisherWeightedMetaAnalysis fisherZ = null;
 
-                                if (metaanalysismethod == METAANALYSISMETHOD.FISHERZFIXED || metaanalysismethod == METAANALYSISMETHOD.FISHERZRANDOM) {
+                                if (metaanalysismethod == MetaAnalysisMethod.FISHERZFIXED || metaanalysismethod == MetaAnalysisMethod.FISHERZRANDOM) {
                                     fisherZ = new FisherWeightedMetaAnalysis();
                                 }
                                 double[] zscores = new double[datasets.length];
@@ -698,9 +701,9 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                                     double metaI2 = 100;
 
                                     double[] zScoresToPrint = zscores;
-                                    if (metaanalysismethod == METAANALYSISMETHOD.FISHERZFIXED || metaanalysismethod == METAANALYSISMETHOD.FISHERZRANDOM) {
+                                    if (metaanalysismethod == MetaAnalysisMethod.FISHERZFIXED || metaanalysismethod == MetaAnalysisMethod.FISHERZRANDOM) {
                                         double[] metaZtmp;
-                                        if (metaanalysismethod == METAANALYSISMETHOD.FISHERZRANDOM) {
+                                        if (metaanalysismethod == MetaAnalysisMethod.FISHERZRANDOM) {
                                             metaZtmp = fisherZ.metaAnalyzeCorrelationsRandomEffect(correlations, samplesizes);
                                         } else {
                                             metaZtmp = fisherZ.metaAnalyzeCorrelationsFixedEffect(correlations, samplesizes);
@@ -783,6 +786,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                                                 topUnpermutedResult.snpPos = variant.getPos();
                                                 topUnpermutedResult.snpAlleles = variant.getAlleles()[0] + "/" + variant.getAlleles()[1];
                                                 topUnpermutedResult.snpEffectAllele = variant.getAlleles()[1];
+                                                topUnpermutedResult.isTransVariant = finalIsTransVariant;
                                             }
                                         }
 
@@ -801,6 +805,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                                                     + "\t" + snpAlleles
                                                     + "\t" + snpEffectAllele
                                                     + "\t" + dfDefault.format(overallAltAlleleFreq)
+                                                    + "\t" + (finalIsTransVariant ? "TRANS" : "CIS")
                                                     + "\t" + metaP
                                                     + "\t" + totalSampleSize
                                                     + "\t" + dfDefault.format(metaZ)
@@ -844,9 +849,9 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                         }  // ENDIF: variant in snpGeneLimitSet || snpLimitSet
                     } // ENDIF: if variant != null
                 } // ENDIF: while snpiterator has next
-                if (tabix != null) {
-                    tabix.close();
-                }
+                // variantProvider.close();
+//                tabix.close();
+                snpIterator.close();
             } // end if annotation not null
         } // end iterate group's genes
 
@@ -910,6 +915,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
                         + "\t" + topUnpermutedResult.snpAlleles
                         + "\t" + topUnpermutedResult.snpEffectAllele
                         + "\t" + dfDefault.format(topUnpermutedResult.snpEffectAlleleFreq)
+                        + "\t" + (topUnpermutedResult.isTransVariant ? "TRANS" : "CIS")
                         + "\t" + topUnpermutedResult.metaP
                         + "\t" + topUnpermutedResult.metaPN
                         + "\t" + dfDefault.format(topUnpermutedResult.metaPZ)
@@ -990,17 +996,6 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
         this.testNonParseableChr = true;
     }
 
-    enum METAANALYSISMETHOD {
-        EMP,
-        FISHERZFIXED,
-        FISHERZRANDOM,
-    }
-
-    enum ANALYSISTYPE {
-        CIS,
-        TRANS,
-        CISTRANS
-    }
 
     private class UnpermutedResult {
         public double metaBeta;
@@ -1016,6 +1011,7 @@ public class MbQTL2ParallelCis extends QTLAnalysis {
         public double[] correlations;
         public String gene;
         public double metaI2 = 1;
+        public boolean isTransVariant;
         double metaP = 1;
         double metaPN = 0;
         double metaPZ = 0;
