@@ -47,6 +47,7 @@ public class MbQTL2Parallel extends QTLAnalysis {
     private boolean dumpPermutationPvalues = false;
     private boolean testNonParseableChr = false;
     private MetaAnalysisMethod metaanalysismethod = MetaAnalysisMethod.EMP;
+    private boolean testOnlySNPs = false;
 
     public MbQTL2Parallel(String vcfFile, int chromosome, String linkfile, String snpLimitFile, String geneLimitFile, String snpGeneLimitFile, String geneExpressionDataFile, String geneAnnotationFile, String outfile) throws IOException {
         super(vcfFile, chromosome, linkfile, snpLimitFile, geneLimitFile, snpGeneLimitFile, geneExpressionDataFile, geneAnnotationFile, outfile);
@@ -429,21 +430,39 @@ public class MbQTL2Parallel extends QTLAnalysis {
                     }
                     VCFVariant variantTmp = snpIterator.next();
                     boolean isTransVariant = false;
-                    if ( (analysisType == AnalysisType.TRANS || analysisType == AnalysisType.CISTRANS) && variantTmp != null) {
-                        isTransVariant = (!cisRegion.overlaps(variantTmp.asFeature()));
-                    }
+
                     ArrayList<VCFVariant> variants = new ArrayList<>();
                     if (variantTmp != null) {
+                        if ((analysisType == AnalysisType.TRANS || analysisType == AnalysisType.CISTRANS)) {
+                            isTransVariant = (!cisRegion.overlaps(variantTmp.asFeature()));
+                        }
+
 //                        String variantId2 = variantTmp.getId();
 //                        if (variantId2.equals("rs779116082;rs745987535")) {
 //                            System.out.println("Got it!");
 //                            splitMultiAllelics = true;
 //                        }
-                        if (analysisType != AnalysisType.TRANS || isTransVariant) {
+                        boolean variantOk = false;
+                        if (analysisType == AnalysisType.CISTRANS) {
+                            variantOk = true;
+                        } else if (isTransVariant && analysisType != AnalysisType.CIS) {
+                            variantOk = true;
+                        } else if (!isTransVariant && analysisType == AnalysisType.CIS) {
+                            variantOk = true;
+                        }
+
+                        if (variantOk) {
                             if (!variantTmp.isMultiallelic()) {
-                                variants.add(variantTmp);
+                                if (!variantTmp.isIndel() || (variantTmp.isIndel() && !testOnlySNPs)) {
+                                    variants.add(variantTmp);
+                                }
                             } else if (splitMultiAllelics) {
-                                variants = variantTmp.splitMultiAllelic();
+                                ArrayList<VCFVariant> variantsTmp = variantTmp.splitMultiAllelic();
+                                for (VCFVariant v : variantsTmp) {
+                                    if (!v.isIndel() || (v.isIndel() && !testOnlySNPs)) {
+                                        variants.add(v);
+                                    }
+                                }
                             }
                         }
                     }
@@ -994,6 +1013,11 @@ public class MbQTL2Parallel extends QTLAnalysis {
 
     public void setTestNonParseableChr() {
         this.testNonParseableChr = true;
+    }
+
+    public void setOnlyTestSNPs() {
+        this.testOnlySNPs = true;
+
     }
 
 

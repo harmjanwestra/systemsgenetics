@@ -61,6 +61,7 @@ public class Main {
         options.addOption("mingenotypecount", "mingenotypecount", true, "Minimal number of individuals per genotype group [default: 0]");
         options.addOption("splitmultiallelic", "splitmultiallelic", false, "Split multi allelic variants [default: skip multi allelic variants].");
         options.addOption("usehardgenotypecalls", "usehardgenotypecalls", false, "Use hard genotype calls in stead of dosages derived from genotype probabilities. [default: use dosages if available]");
+        options.addOption("onlytestsnps", "onlytestsnps", false, "Only test SNPs, skip indels, STRs, etc. [default: test all variants in VCF passing QC]");
 
         try {
             CommandLineParser parser = new DefaultParser();
@@ -463,6 +464,10 @@ public class Main {
 
                         if (cmd.hasOption("usehardgenotypecalls")) {
                             bQTL.setUseHardGenotypeCalls();
+                        }
+
+                        if(cmd.hasOption("onlytestsnps")){
+                            bQTL.setOnlyTestSNPs();
                         }
 
                         bQTL.run();
