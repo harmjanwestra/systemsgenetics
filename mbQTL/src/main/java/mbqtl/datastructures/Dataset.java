@@ -14,8 +14,8 @@ public class Dataset implements Comparable<Dataset> {
 	private String name;
 	private int[] genotypeIds;
 	private int[] expressionIds;
-	private ArrayList<Integer> DNAIds = new ArrayList();
-	private ArrayList<Integer> RNAIds = new ArrayList();
+	private ArrayList<Integer> DNAIds = new ArrayList<>();
+	private ArrayList<Integer> RNAIds = new ArrayList<>();
 
 	public Dataset() {
 	}

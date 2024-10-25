@@ -156,13 +156,15 @@ public class QTLAnalysis {
             while (elems != null) {
                 String snp = elems[0];
                 String gene = elems[1];
-                HashSet<String> set = snpGeneLimitSet.get(gene);
-                if (set == null) {
-                    set = new HashSet<>();
+                if (geneLimitSet == null || geneLimitSet.contains(gene)) {
+                    HashSet<String> set = snpGeneLimitSet.get(gene);
+                    if (set == null) {
+                        set = new HashSet<>();
+                    }
+                    set.add(snp);
+                    snpset.add(snp);
+                    snpGeneLimitSet.put(gene, set);
                 }
-                set.add(snp);
-                snpset.add(snp);
-                snpGeneLimitSet.put(gene, set);
                 elems = tf2.readLineElems(TextFile.tab);
             }
             snpLimitSet = snpset;

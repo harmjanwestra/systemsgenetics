@@ -41,7 +41,7 @@ public class GeneExpressionData {
 
 		String[] header = Strings.whitespace.split(ln);
 		boolean[] includeColumn = new boolean[header.length];
-		ArrayList<String> sampleTmp = new ArrayList();
+		ArrayList<String> sampleTmp = new ArrayList<>();
 
 		for(int i = 1; i < header.length; ++i) {
 			String sample = header[i];
@@ -60,8 +60,8 @@ public class GeneExpressionData {
 		this.samples = (String[])sampleTmp.toArray(new String[0]);
 		this.sampleMap = Util.hash(sampleTmp);
 		String[] elems = tf.readLineElems(Strings.whitespace);
-		ArrayList<double[]> dataList = new ArrayList();
-		ArrayList<String> genetmp = new ArrayList();
+		ArrayList<double[]> dataList = new ArrayList<>();
+		ArrayList<String> genetmp = new ArrayList<>();
 		int lctr = 0;
 
 		boolean printWarning;

@@ -526,6 +526,9 @@ public class Main {
             System.out.println("Probably some command line parameter was wrong. Try running java -jar MbQTL-SNAPSHOT-jar-with-dependencies.jar");
             e.printStackTrace();
         }
+        System.out.println();
+        System.out.println("Exiting...");
+        System.out.println();
     }
 
 }

@@ -1,6 +1,7 @@
 package mbqtl;
 
 public class VariantQCObj {
+	public int nrMissing = -1;
 	double maf = 0;
 	double cr = 0;
 	double hwep = 0;
@@ -13,6 +14,7 @@ public class VariantQCObj {
 				", cr=" + cr +
 				", hwep=" + hwep +
 				", passqc=" + passqc +
+				", nrMissing=" + nrMissing +
 				'}';
 	}
 }
