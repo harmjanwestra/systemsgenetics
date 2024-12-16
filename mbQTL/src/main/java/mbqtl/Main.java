@@ -44,6 +44,7 @@ public class Main {
         options.addOption("input2", "input2", true, "Input file 2");
         options.addOption("nriters", "nriters", true, "Nr iters to concatenate using concatconditional");
         options.addOption("sortbyz", "sortbyz", false, "Sort by Z-score");
+        options.addOption("sortbysnppos", "sortbysnppos", false, "Sort by SNP position");
         options.addOption("eqtlset", "eqtlset", true, "[determineldgwas] - List of eQTL snps to test - txt.gz file");
         options.addOption("eqtlfile", "eqtlfile", true, "[determineldgwas] - eQTL file - txt.gz file");
         options.addOption("gwasset", "gwasset", true, "[determineldgwas] - List of GWAS snps to test - txt.gz file");
@@ -62,7 +63,8 @@ public class Main {
         options.addOption("splitmultiallelic", "splitmultiallelic", false, "Split multi allelic variants [default: skip multi allelic variants].");
         options.addOption("usehardgenotypecalls", "usehardgenotypecalls", false, "Use hard genotype calls in stead of dosages derived from genotype probabilities. [default: use dosages if available]");
         options.addOption("onlytestsnps", "onlytestsnps", false, "Only test SNPs, skip indels, STRs, etc. [default: test all variants in VCF passing QC]");
-        options.addOption("correlationweights", "correlationweights", false, "Weight the correlation for these weights. Format: sample, weight, tab-separated");
+        options.addOption("correlationweights", "correlationweights", true, "Weight the correlation for these weights. Format: sample, weight, tab-separated");
+        options.addOption("sortbyz", "sortbyz", false, "[]");
 
         try {
             CommandLineParser parser = new DefaultParser();
