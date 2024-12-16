@@ -64,7 +64,7 @@ public class Main {
         options.addOption("usehardgenotypecalls", "usehardgenotypecalls", false, "Use hard genotype calls in stead of dosages derived from genotype probabilities. [default: use dosages if available]");
         options.addOption("onlytestsnps", "onlytestsnps", false, "Only test SNPs, skip indels, STRs, etc. [default: test all variants in VCF passing QC]");
         options.addOption("correlationweights", "correlationweights", true, "Weight the correlation for these weights. Format: sample, weight, tab-separated");
-        options.addOption("sortbyz", "sortbyz", false, "[]");
+
 
         try {
             CommandLineParser parser = new DefaultParser();
