@@ -46,6 +46,7 @@ public class MbQTL2Parallel extends QTLAnalysis {
     private MetaAnalysisMethod metaanalysismethod = MetaAnalysisMethod.EMP;
     private StatisticalTest statisticalTest = StatisticalTest.UNWEIGHTEDCORRELATION;
     private boolean testOnlySNPs = false;
+    private double[] weightData = null;
 
     public MbQTL2Parallel(String vcfFile, int chromosome, String linkfile, String snpLimitFile, String geneLimitFile, String snpGeneLimitFile, String geneExpressionDataFile, String geneAnnotationFile, String outfile) throws IOException {
         super(vcfFile, chromosome, linkfile, snpLimitFile, geneLimitFile, snpGeneLimitFile, geneExpressionDataFile, geneAnnotationFile, outfile);
@@ -625,7 +626,8 @@ public class MbQTL2Parallel extends QTLAnalysis {
 
                                         double[] datasetWeight = weightsPerDataset[d];
                                         double[] datasetWeightCopy = null;
-                                        if(datasetWeight!=null){
+                                        if (datasetWeight != null) {
+                                            datasetWeightCopy = new double[datasetWeight.length];
                                             System.arraycopy(datasetWeight, 0, datasetWeightCopy, 0, datasetWeight.length);
                                         }
 
@@ -636,7 +638,7 @@ public class MbQTL2Parallel extends QTLAnalysis {
                                             Util.shuffleArray(datasetExpCopy, seed[permutation]);
 
                                             // shuffle the weights similarly..
-                                            if(datasetWeightCopy!=null) {
+                                            if (datasetWeightCopy != null) {
                                                 Util.shuffleArray(datasetWeightCopy, seed[permutation]);
                                             }
                                         }
@@ -644,25 +646,24 @@ public class MbQTL2Parallel extends QTLAnalysis {
                                         // prune the data (remove missing values)
                                         // can't prune the data earlier (would save a lot of compute time) because shuffling is performed over all available samples for this dataset
                                         // this is because the order of permuted samples should be equal across all SNPs
-                                        double[] datasetExpPruned = null;
-                                        double[] datasetDsPruned = null;
-                                        double[] datasetGtPruned = null;
-                                        double[] datasetWeightsPruned = null;
+                                        double[] datasetExpPruned = datasetExpCopy;
+                                        double[] datasetWeightsPruned = datasetWeightCopy;
+                                        double[] datasetDsPruned = datasetDs;
+                                        double[] datasetGtPruned = datasetGt;
 
-                                        if (qcobj.nrMissing > 0) {
-                                            Triple<double[], double[], double[]> prunedDatasetData = pruneMissingValues(datasetGt,
-                                                    datasetDs,
-                                                    datasetExpCopy,
-                                                    datasetWeight
-                                            );
-                                            // re-rank data here? original EMP does not, but it is the right thing to do...
-                                            datasetExpPruned = prunedDatasetData.getRight();
-                                            datasetDsPruned = prunedDatasetData.getMiddle();
-                                            datasetGtPruned = prunedDatasetData.getLeft();
+
+                                        int remaining = datasetGtPruned.length - qcobj.nrMissing;
+                                        if (qcobj.nrMissing > 0 && remaining >= minObservations) {
+                                            PruneObj pruneObj = pruneMising(datasetExpPruned, datasetWeightsPruned, datasetDsPruned, datasetGtPruned, qcobj.nrMissing);
+                                            datasetExpPruned = pruneObj.datasetExpPruned;
+                                            datasetWeightsPruned = pruneObj.datasetWeightsPruned;
+                                            datasetDsPruned = pruneObj.datasetDsPruned;
+                                            datasetGtPruned = pruneObj.datasetGtPruned;
+
                                         }
 
-                                        if (datasetExpPruned.length >= minObservations) {
-
+                                        if (remaining >= minObservations) {
+// re-rank data here? original EMP does not, but it is the right thing to do...
 //                                    if (rankData) {
 //                                        RankArray ranker = new RankArray();
 //                                        datasetExpPruned = ranker.rank(datasetExpPruned, true); // does this work with NaNs? answer: no
@@ -1032,6 +1033,35 @@ public class MbQTL2Parallel extends QTLAnalysis {
         }
     }
 
+    private PruneObj pruneMising(double[] expressionForDataset, double[] weightsForDataset, double[] genotypeDosagesForDataset, double[] genotypesForDataset, int remaining) {
+
+        PruneObj output = new PruneObj();
+        if (genotypeDosagesForDataset != null) {
+            output.datasetDsPruned = new double[remaining];
+        }
+        output.datasetGtPruned = new double[remaining];
+        output.datasetExpPruned = new double[remaining];
+        if (weightsForDataset != null) {
+            output.datasetWeightsPruned = new double[remaining];
+        }
+        int ctr = 0;
+        for (int i = 0; i < genotypesForDataset.length; i++) {
+            if (genotypesForDataset[i] > -1
+                    && !Double.isNaN(expressionForDataset[i])) {
+                if (genotypeDosagesForDataset != null) {
+                    output.datasetDsPruned[ctr] = genotypeDosagesForDataset[i];
+                }
+                if (weightsForDataset != null) {
+                    output.datasetWeightsPruned[ctr] = weightsForDataset[i];
+                }
+                output.datasetGtPruned[ctr] = genotypesForDataset[i];
+                output.datasetExpPruned[ctr] = expressionForDataset[i];
+                ctr++;
+            }
+        }
+        return output;
+    }
+
     private String toNeatP(double pval) {
         if (pval <= 0) {
             return "0";
@@ -1094,6 +1124,48 @@ public class MbQTL2Parallel extends QTLAnalysis {
 
     }
 
+    public void setCorrelationWeights(String correlationweights) throws Exception {
+        if (correlationweights != null) {
+
+            statisticalTest = StatisticalTest.WEIGHTEDCORRELATION;
+            System.out.println("Loading correlation weights from: " + correlationweights);
+            TextFile tf = new TextFile(correlationweights, TextFile.R);
+            Map<String, String> tmpWeights = tf.readAsHashMap(0, 1);
+            tf.close();
+
+            // should be put in the same order as expression IDs
+            int overlap = 0;
+            int missing = 0;
+
+            weightData = new double[expressionData.samples.length];
+            for (int i = 0; i < expressionData.samples.length; i++) {
+                String sample = expressionData.samples[i];
+                String txt = tmpWeights.get(sample);
+                if (txt == null) {
+                    System.err.println("No weights loaded for: " + sample);
+                    missing++;
+                } else {
+                    try {
+                        weightData[i] = Double.parseDouble(txt);
+                    } catch (NumberFormatException e) {
+                        System.err.println("Error: no valid double as weight for sample: " + sample);
+                        System.exit(-1);
+                    }
+                }
+            }
+            if (missing > 0) {
+                throw new Exception("Error: not all samples could be given a weight.");
+            }
+
+        }
+    }
+
+    private class PruneObj {
+        public double[] datasetExpPruned;
+        public double[] datasetWeightsPruned;
+        public double[] datasetDsPruned;
+        public double[] datasetGtPruned;
+    }
 
     private class UnpermutedResult {
         public double metaBeta;
