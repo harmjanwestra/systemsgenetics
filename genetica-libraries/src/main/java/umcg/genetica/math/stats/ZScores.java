@@ -8,6 +8,8 @@ import JSci.maths.statistics.NormalDistribution;
 import cern.jet.random.tdouble.StudentT;
 import cern.jet.stat.tdouble.Probability;
 
+import java.util.ArrayList;
+
 //import cern.jet.random.tdouble.engine.DRand;
 //import cern.jet.random.tdouble.engine.DoubleRandomEngine;
 
@@ -437,8 +439,7 @@ public class ZScores {
     Formula taken from Supplementary Information
      */
     public static double[] zToBeta(double z, double maf, int n) {
-
-
+        
         double chi = z * z;
         double a = 2 * maf * (1 - maf) * (n + chi);
         double beta = z / Math.sqrt(a);
