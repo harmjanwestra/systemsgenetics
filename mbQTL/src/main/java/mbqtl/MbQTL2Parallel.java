@@ -48,8 +48,9 @@ public class MbQTL2Parallel extends QTLAnalysis {
     private boolean testOnlySNPs = false;
     private double[] weightData = null;
 
-    public MbQTL2Parallel(String vcfFile, int chromosome, String linkfile, String snpLimitFile, String geneLimitFile, String snpGeneLimitFile, String geneExpressionDataFile, String geneAnnotationFile, String outfile) throws IOException {
-        super(vcfFile, chromosome, linkfile, snpLimitFile, geneLimitFile, snpGeneLimitFile, geneExpressionDataFile, geneAnnotationFile, outfile);
+    public MbQTL2Parallel(String vcfFile, int chromosome, String linkfile, String snpLimitFile, String geneLimitFile, String snpGeneLimitFile, String geneExpressionDataFile, String geneAnnotationFile, int minNumberOfDatasets, int minObservations, String outfile) throws IOException {
+        super(vcfFile, chromosome, linkfile, snpLimitFile, geneLimitFile, snpGeneLimitFile, geneExpressionDataFile, geneAnnotationFile, minNumberOfDatasets,
+                minObservations, outfile);
         if (datasets.length < minNumberOfDatasets) {
             System.out.println(minNumberOfDatasets + " datasets required, but only " + datasets.length + " datasets defined. Changing setting to: " + datasets.length);
             minNumberOfDatasets = datasets.length;
@@ -505,6 +506,7 @@ public class MbQTL2Parallel extends QTLAnalysis {
                                 double[] genotypesForDataset = thisDataset.select(genotypes, thisDataset.getGenotypeIds()); // select required genotype IDs
 
                                 VariantQCObj qcobj = checkVariant(genotypesForDataset);
+
                                 if (qcobj.passqc) {
                                     double[] dosagesForDataset = thisDataset.select(finalDosages, thisDataset.getGenotypeIds()); // select required dosages
                                     double[] expressionForDataset = expressionPerDataset[d];
@@ -536,12 +538,26 @@ public class MbQTL2Parallel extends QTLAnalysis {
                                             finalWeightsPerDataset[d]);*/
 
                                     int nrmissing = 0;
+                                    boolean datasetHasMissingGenotypes = false;
+                                    boolean datasetHasMissingExpression = false;
                                     for (int i = 0; i < genotypesForDataset.length; i++) {
+                                        if (genotypesForDataset[i] == -1 && !datasetHasMissingGenotypes) {
+                                            datasetHasMissingGenotypes = true;
+                                        }
+                                        if (Double.isNaN(expressionForDataset[i])) {
+                                            datasetHasMissingExpression = true;
+                                        }
                                         if (genotypesForDataset[i] == -1
                                                 || Double.isNaN(expressionForDataset[i])
                                                 || (weightsForDataset != null && Double.isNaN(weightsForDataset[i]))) {
                                             nrmissing++;
                                         }
+                                    }
+
+                                    if (datasetHasMissingGenotypes && datasetHasMissingExpression && nrPermutations > 0) {
+                                        System.err.println("Error: dataset " + thisDataset.getName() + " has missing genotypes AND missing expression data");
+                                        System.err.println("This is not compatible with current permutation strategy.");
+                                        System.exit(-1);
                                     }
 
                                     int nrRemaining = genotypesForDataset.length - nrmissing;
@@ -566,7 +582,9 @@ public class MbQTL2Parallel extends QTLAnalysis {
                                         qcobj.passqc = false;
                                     }
 
-                                    qcobj = checkVariant(tmpgenotypes);
+                                    if (qcobj.passqc) {
+                                        qcobj = checkVariant(tmpgenotypes);
+                                    }
                                     if (qcobj.passqc) {
                                         genotypesPerDataset[d] = genotypesForDataset;
                                         dosagesPerDataset[d] = dosagesForDataset;
@@ -594,12 +612,15 @@ public class MbQTL2Parallel extends QTLAnalysis {
                             }
                             double[] finalPermutationPvalsForSNP = permutationPvalsForSNP;
                             boolean finalIsTransVariant = isTransVariant;
+
+                            // test the actual variant
                             IntStream.range(-1, nrPermutations).forEach(permutation -> {
                                 FisherWeightedMetaAnalysis fisherZ = null;
 
                                 if (metaanalysismethod == MetaAnalysisMethod.FISHERZFIXED || metaanalysismethod == MetaAnalysisMethod.FISHERZRANDOM) {
                                     fisherZ = new FisherWeightedMetaAnalysis();
                                 }
+
                                 double[] zscores = new double[datasets.length];
                                 double[] correlations = new double[datasets.length];
                                 int[] samplesizes = new int[datasets.length];
@@ -651,15 +672,16 @@ public class MbQTL2Parallel extends QTLAnalysis {
                                         double[] datasetDsPruned = datasetDs;
                                         double[] datasetGtPruned = datasetGt;
 
-
                                         int remaining = datasetGtPruned.length - qcobj.nrMissing;
                                         if (qcobj.nrMissing > 0 && remaining >= minObservations) {
-                                            PruneObj pruneObj = pruneMising(datasetExpPruned, datasetWeightsPruned, datasetDsPruned, datasetGtPruned, qcobj.nrMissing);
+//                                            System.out.println();
+//                                            System.out.println();
+//                                            System.out.println("perm: " + permutation + "\td: " + d + "\texp: " + datasetExpPruned.length + "\tweights: " + datasetWeightsPruned.length + "\tdosages: " + datasetDsPruned.length + "\tgenotype: " + datasetGtPruned.length + "\t" + qcobj.nrMissing);
+                                            PruneObj pruneObj = pruneMissing(datasetExpPruned, datasetWeightsPruned, datasetDsPruned, datasetGtPruned, remaining);
                                             datasetExpPruned = pruneObj.datasetExpPruned;
                                             datasetWeightsPruned = pruneObj.datasetWeightsPruned;
                                             datasetDsPruned = pruneObj.datasetDsPruned;
                                             datasetGtPruned = pruneObj.datasetGtPruned;
-
                                         }
 
                                         if (remaining >= minObservations) {
@@ -1033,7 +1055,7 @@ public class MbQTL2Parallel extends QTLAnalysis {
         }
     }
 
-    private PruneObj pruneMising(double[] expressionForDataset, double[] weightsForDataset, double[] genotypeDosagesForDataset, double[] genotypesForDataset, int remaining) {
+    private PruneObj pruneMissing(double[] expressionForDataset, double[] weightsForDataset, double[] genotypeDosagesForDataset, double[] genotypesForDataset, int remaining) {
 
         PruneObj output = new PruneObj();
         if (genotypeDosagesForDataset != null) {
@@ -1046,8 +1068,7 @@ public class MbQTL2Parallel extends QTLAnalysis {
         }
         int ctr = 0;
         for (int i = 0; i < genotypesForDataset.length; i++) {
-            if (genotypesForDataset[i] > -1
-                    && !Double.isNaN(expressionForDataset[i])) {
+            if (genotypesForDataset[i] > -1 && !Double.isNaN(expressionForDataset[i])) {
                 if (genotypeDosagesForDataset != null) {
                     output.datasetDsPruned[ctr] = genotypeDosagesForDataset[i];
                 }

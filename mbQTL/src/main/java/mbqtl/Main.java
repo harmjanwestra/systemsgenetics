@@ -73,6 +73,17 @@ public class Main {
             String mode = cmd.getOptionValue("mode");
 
 
+            int minNrDatasets = 2;
+            if (cmd.hasOption("nrdatasets")) {
+                minNrDatasets = Integer.parseInt(cmd.getOptionValue("nrdatasets"));
+
+            }
+
+            int minObservations = 10;
+            if (cmd.hasOption("minobservations")) {
+                minObservations = Integer.parseInt(cmd.getOptionValue("minobservations"));
+            }
+
             String vcf = null;
             if (cmd.hasOption("vcf")) {
                 vcf = cmd.getOptionValue("vcf");
@@ -272,7 +283,8 @@ public class Main {
                         System.out.println("SNP/Gene combos: " + snpgenelimit);
                         System.out.println("Genelimit: " + genelimit);
                     } else {
-                        QTLRegression qtlr = new QTLRegression(vcf, chrom, linkfile, snplimit, genelimit, snpgenelimit, genexpression, geneannotation, output);
+
+                        QTLRegression qtlr = new QTLRegression(vcf, chrom, linkfile, snplimit, genelimit, snpgenelimit, genexpression, geneannotation, minNrDatasets, minObservations, output);
                         if (cmd.hasOption("replacemissinggenotypes")) {
                             qtlr.setReplaceMissingGenotypes(true);
                         }
@@ -281,10 +293,6 @@ public class Main {
                             qtlr.setRankData(false);
                         }
 
-                        if (cmd.hasOption("minobservations")) {
-                            int t = Integer.parseInt(cmd.getOptionValue("minobservations"));
-                            qtlr.setMinObservations(t);
-                        }
 
                         if (cmd.hasOption("maf")) {
                             double t = Double.parseDouble(cmd.getOptionValue("maf"));
@@ -304,10 +312,7 @@ public class Main {
                             qtlr.setCisWindow(t);
                         }
 
-                        if (cmd.hasOption("nrdatasets")) {
-                            int t = Integer.parseInt(cmd.getOptionValue("nrdatasets"));
-                            qtlr.setMinNumberOfDatasets(t);
-                        }
+
                         if (cmd.hasOption("snpannotation")) {
                             qtlr.loadSNPAnnotation(cmd.getOptionValue("snpannotation"));
                         }
@@ -325,7 +330,7 @@ public class Main {
                         System.out.println("Gene expression: " + genexpression);
                         System.out.println("Output: " + output);
                     } else {
-                        MbQTLPlot bpp = new MbQTLPlot(vcf, chrom, linkfile, snplimit, genelimit, snpgenelimit, genexpression, geneannotation, output);
+                        MbQTLPlot bpp = new MbQTLPlot(vcf, chrom, linkfile, snplimit, genelimit, snpgenelimit, genexpression, geneannotation, minNrDatasets, minObservations, output);
                         if (cmd.hasOption("replacemissinggenotypes")) {
                             bpp.setReplaceMissingGenotypes(true);
                         }
@@ -336,10 +341,7 @@ public class Main {
                         if (cmd.hasOption("outputall")) {
                             bpp.setOutputAll(true);
                         }
-                        if (cmd.hasOption("minobservations")) {
-                            int t = Integer.parseInt(cmd.getOptionValue("minobservations"));
-                            bpp.setMinObservations(t);
-                        }
+
 
                         if (cmd.hasOption("maf")) {
                             double t = Double.parseDouble(cmd.getOptionValue("maf"));
@@ -354,11 +356,6 @@ public class Main {
                             bpp.setHwepthreshold(t);
                         }
 
-
-                        if (cmd.hasOption("nrdatasets")) {
-                            int t = Integer.parseInt(cmd.getOptionValue("nrdatasets"));
-                            bpp.setMinNumberOfDatasets(t);
-                        }
                         bpp.plot();
                     }
                     break;
@@ -377,7 +374,7 @@ public class Main {
                         System.out.println("Gene expression: " + genexpression);
                         System.out.println("Output: " + output);
                     } else {
-                        MbQTL2Parallel bQTL = new MbQTL2Parallel(vcf, chrom, linkfile, snplimit, genelimit, snpgenelimit, genexpression, geneannotation, output);
+                        MbQTL2Parallel bQTL = new MbQTL2Parallel(vcf, chrom, linkfile, snplimit, genelimit, snpgenelimit, genexpression, geneannotation, minNrDatasets, minObservations, output);
                         if (cmd.hasOption("snpannotation")) {
                             bQTL.loadSNPAnnotation(cmd.getOptionValue("snpannotation"));
                         }
@@ -405,10 +402,6 @@ public class Main {
                         if (cmd.hasOption("snplog")) {
                             bQTL.setOutputSNPLog(true);
                         }
-                        if (cmd.hasOption("minobservations")) {
-                            int t = Integer.parseInt(cmd.getOptionValue("minobservations"));
-                            bQTL.setMinObservations(t);
-                        }
 
                         if (cmd.hasOption("maf")) {
                             double t = Double.parseDouble(cmd.getOptionValue("maf"));
@@ -435,10 +428,7 @@ public class Main {
                             long seed = Long.parseLong(cmd.getOptionValue("seed"));
                             bQTL.setRandomSeed(seed);
                         }
-                        if (cmd.hasOption("nrdatasets")) {
-                            int t = Integer.parseInt(cmd.getOptionValue("nrdatasets"));
-                            bQTL.setMinNumberOfDatasets(t);
-                        }
+
 
                         if (cmd.hasOption("empzmeta")) {
                             bQTL.setMetaanalysismethod(MetaAnalysisMethod.EMP);
@@ -469,11 +459,11 @@ public class Main {
                             bQTL.setUseHardGenotypeCalls();
                         }
 
-                        if(cmd.hasOption("onlytestsnps")){
+                        if (cmd.hasOption("onlytestsnps")) {
                             bQTL.setOnlyTestSNPs();
                         }
 
-                        if(cmd.hasOption("correlationweights")){
+                        if (cmd.hasOption("correlationweights")) {
                             bQTL.setCorrelationWeights(cmd.getOptionValue("correlationweights"));
                         }
 
@@ -487,7 +477,7 @@ public class Main {
                         System.err.println("Optional: --seed 123456789 --outputall --perm 1000 ");
                     } else {
 
-                        MbQTLSingleDataset ds = new MbQTLSingleDataset(vcf, chrom, linkfile, genelimit, genexpression, geneannotation, output);
+                        MbQTLSingleDataset ds = new MbQTLSingleDataset(vcf, chrom, linkfile, genelimit, genexpression, geneannotation, minNrDatasets, minObservations, output);
 
                         if (cmd.hasOption("maf")) {
                             double t = Double.parseDouble(cmd.getOptionValue("maf"));

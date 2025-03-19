@@ -20,7 +20,7 @@ public class EMPValidator extends QTLAnalysis {
 
 
 	public EMPValidator(String vcfFile, int chromosome, String linkfile, String geneLimitFile, String geneExpressionDataFile, String geneAnnotationFile, String outfile) throws IOException {
-		super(vcfFile, chromosome, linkfile, null, geneLimitFile, null, geneExpressionDataFile, geneAnnotationFile, outfile);
+		super(vcfFile, chromosome, linkfile, null, geneLimitFile, null, geneExpressionDataFile, geneAnnotationFile, 1, 1, outfile);
 	}
 
 	public void validate(String vcfFile,

@@ -12,6 +12,9 @@ import umcg.genetica.math.stats.Correlation;
 import umcg.genetica.math.stats.HWE;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -56,10 +59,15 @@ public class QTLAnalysis {
                        String snpGeneLimitFile,
                        String geneExpressionDataFile,
                        String geneAnnotationFile,
+                       int minNumberOfDatasets,
+                       int minObservations,
                        String outputPrefix) throws IOException {
         System.out.println("-------------------------");
         System.out.println("Initializing QTL analysis");
         System.out.println("-------------------------");
+
+        this.minNumberOfDatasets = minNumberOfDatasets;
+        this.minObservations = minObservations;
 
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
@@ -81,8 +89,16 @@ public class QTLAnalysis {
         this.chromosome = chromosome;
 
         this.outputPrefix = outputPrefix;
-        // load genotyped samples
+        // make output dir if not exists
+        Path p = Paths.get(outputPrefix);
+        Path parent = p.getParent();
+        if (parent != null) {
+            if (!Files.exists(parent)) {
+                Files.createDirectories(parent);
+            }
+        }
 
+        // load genotyped samples
         if (!Gpio.exists(vcfFile)) {
             // try a replacement
             System.out.println("Could not find: " + vcfFile);
@@ -242,9 +258,7 @@ public class QTLAnalysis {
         System.out.println();
     }
 
-    public void setMinObservations(int minObservations) {
-        this.minObservations = minObservations;
-    }
+
 
     public void setMinGenotypeCount(int mingenotypecount) {
         this.minGenotypeCount = mingenotypecount;
@@ -513,10 +527,6 @@ public class QTLAnalysis {
 
     public void setHwepthreshold(double hwepthreshold) {
         this.hwepthreshold = hwepthreshold;
-    }
-
-    public void setMinNumberOfDatasets(int minNumberOfDatasets) {
-        this.minNumberOfDatasets = minNumberOfDatasets;
     }
 
     protected double[] getDosage(double[][] dosage) {
