@@ -2,6 +2,7 @@ package mbqtl;
 
 import mbqtl.enums.AnalysisType;
 import mbqtl.enums.MetaAnalysisMethod;
+import mbqtl.enums.PermutationStrategy;
 import org.apache.commons.cli.*;
 
 import java.io.IOException;
@@ -64,7 +65,7 @@ public class Main {
         options.addOption("usehardgenotypecalls", "usehardgenotypecalls", false, "Use hard genotype calls in stead of dosages derived from genotype probabilities. [default: use dosages if available]");
         options.addOption("onlytestsnps", "onlytestsnps", false, "Only test SNPs, skip indels, STRs, etc. [default: test all variants in VCF passing QC]");
         options.addOption("correlationweights", "correlationweights", true, "Weight the correlation for these weights. Format: sample, weight, tab-separated");
-
+        options.addOption("permutationstrategy", "permutationstrategy", true, "Permutation strategy [matched|random|semirandom]: use same permuted order for each variant and gene per permutation (matched), use completely random assignments (random), or somewhere in between (semirandom). Only random and semirandom can be used if there is missingness in both genotype and genotype data.");
 
         try {
             CommandLineParser parser = new DefaultParser();
@@ -465,6 +466,24 @@ public class Main {
 
                         if (cmd.hasOption("correlationweights")) {
                             bQTL.setCorrelationWeights(cmd.getOptionValue("correlationweights"));
+                        }
+
+                        if (cmd.hasOption("permutationstrategy")) {
+                            String setting = cmd.getOptionValue("permutationstrategy");
+                            switch (setting) {
+                                case "random":
+                                    bQTL.setPermutationStrategy(PermutationStrategy.RANDOM);
+                                    break;
+                                case "semirandom":
+                                    bQTL.setPermutationStrategy(PermutationStrategy.SEMIRANDOM);
+                                    break;
+                                case "matched":
+                                    bQTL.setPermutationStrategy(PermutationStrategy.MATCHED);
+                                    break;
+                                default:
+                                    System.err.println("Error: pick one permutation strategy: random, semimatched or matched");
+                                    System.exit(-1);
+                            }
                         }
 
                         bQTL.run();

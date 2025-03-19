@@ -47,6 +47,7 @@ public class MbQTL2Parallel extends QTLAnalysis {
     private StatisticalTest statisticalTest = StatisticalTest.UNWEIGHTEDCORRELATION;
     private boolean testOnlySNPs = false;
     private double[] weightData = null;
+    private PermutationStrategy permutationStrategy = PermutationStrategy.MATCHED;
 
     public MbQTL2Parallel(String vcfFile, int chromosome, String linkfile, String snpLimitFile, String geneLimitFile, String snpGeneLimitFile, String geneExpressionDataFile, String geneAnnotationFile, int minNumberOfDatasets, int minObservations, String outfile) throws IOException {
         super(vcfFile, chromosome, linkfile, snpLimitFile, geneLimitFile, snpGeneLimitFile, geneExpressionDataFile, geneAnnotationFile, minNumberOfDatasets,
@@ -91,6 +92,10 @@ public class MbQTL2Parallel extends QTLAnalysis {
 
     public void setMetaanalysismethod(MetaAnalysisMethod method) {
         this.metaanalysismethod = method;
+    }
+
+    public void setPermutationStrategy(PermutationStrategy permutationStrategy){
+        this.permutationStrategy = permutationStrategy;
     }
 
     public void run() throws IOException {
@@ -554,7 +559,7 @@ public class MbQTL2Parallel extends QTLAnalysis {
                                         }
                                     }
 
-                                    if (datasetHasMissingGenotypes && datasetHasMissingExpression && nrPermutations > 0) {
+                                    if (datasetHasMissingGenotypes && datasetHasMissingExpression && nrPermutations > 0 && permutationStrategy == PermutationStrategy.MATCHED) {
                                         System.err.println("Error: dataset " + thisDataset.getName() + " has missing genotypes AND missing expression data");
                                         System.err.println("This is not compatible with current permutation strategy.");
                                         System.exit(-1);
@@ -654,8 +659,8 @@ public class MbQTL2Parallel extends QTLAnalysis {
 
                                         double[] datasetDs = dosagesPerDataset[d];
 
-                                        // if this is a permutation, shuffle the data
-                                        if (permutation != -1) {
+                                        // if this is a permutation, and we want to keep the order of samples equal, shuffle the data before pruning missing values
+                                        if (permutationStrategy == PermutationStrategy.MATCHED && permutation != -1) {
                                             Util.shuffleArray(datasetExpCopy, seed[permutation]);
 
                                             // shuffle the weights similarly..
@@ -685,6 +690,21 @@ public class MbQTL2Parallel extends QTLAnalysis {
                                         }
 
                                         if (remaining >= minObservations) {
+                                            if (permutationStrategy != PermutationStrategy.MATCHED && permutation != -1) {
+                                                long currentseed = 0;
+                                                if (permutationStrategy == PermutationStrategy.SEMIRANDOM) {
+                                                    currentseed = seed[permutation];
+                                                } else {
+                                                    Random rand = new Random(this.randomSeed);
+                                                    currentseed = rand.nextLong();
+                                                }
+                                                Util.shuffleArray(datasetExpPruned, currentseed);
+
+                                                // shuffle the weights similarly..
+                                                if (datasetWeightCopy != null) {
+                                                    Util.shuffleArray(datasetWeightCopy, currentseed);
+                                                }
+                                            }
 // re-rank data here? original EMP does not, but it is the right thing to do...
 //                                    if (rankData) {
 //                                        RankArray ranker = new RankArray();
