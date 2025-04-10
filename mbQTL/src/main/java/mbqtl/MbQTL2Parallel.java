@@ -94,7 +94,7 @@ public class MbQTL2Parallel extends QTLAnalysis {
         this.metaanalysismethod = method;
     }
 
-    public void setPermutationStrategy(PermutationStrategy permutationStrategy){
+    public void setPermutationStrategy(PermutationStrategy permutationStrategy) {
         this.permutationStrategy = permutationStrategy;
     }
 
@@ -136,6 +136,8 @@ public class MbQTL2Parallel extends QTLAnalysis {
         System.out.println("Writing all permutations: " + dumpPermutationPvalues);
         System.out.println("Meta-analysis method:\t" + metaanalysismethod);
         System.out.println("Analysis type:\t" + analysisType);
+        System.out.println("Correlation method:\t" + statisticalTest);
+        System.out.println("Permutation strategy:\t" + permutationStrategy);
         System.out.println();
 
         Chromosome chromosomeObj = Chromosome.parseChr("" + chromosome);
@@ -282,6 +284,7 @@ public class MbQTL2Parallel extends QTLAnalysis {
             }
             geneObjs.sort(new FeatureComparator());
             ProgressBar pb = new ProgressBar(expressionData.genes.length, "Processing " + expressionData.genes.length + " genes...");
+            pb.setPrintEvery(10);
             IntStream.range(0, geneObjs.size()).parallel().forEach(g -> {
                 HashSet<String> groupGenes = new HashSet<>();
                 groupGenes.add(geneObjs.get(g).getName());
@@ -690,30 +693,30 @@ public class MbQTL2Parallel extends QTLAnalysis {
                                         }
 
                                         if (remaining >= minObservations) {
-                                            if (permutationStrategy != PermutationStrategy.MATCHED && permutation != -1) {
-                                                long currentseed = 0;
-                                                if (permutationStrategy == PermutationStrategy.SEMIRANDOM) {
-                                                    currentseed = seed[permutation];
-                                                } else {
-                                                    Random rand = new Random(this.randomSeed);
-                                                    currentseed = rand.nextLong();
-                                                }
-                                                Util.shuffleArray(datasetExpPruned, currentseed);
-
-                                                // shuffle the weights similarly..
-                                                if (datasetWeightCopy != null) {
-                                                    Util.shuffleArray(datasetWeightCopy, currentseed);
-                                                }
-                                            }
-// re-rank data here? original EMP does not, but it is the right thing to do...
-//                                    if (rankData) {
-//                                        RankArray ranker = new RankArray();
-//                                        datasetExpPruned = ranker.rank(datasetExpPruned, true); // does this work with NaNs? answer: no
-//                                    }
-
-                                            // perform correlation
                                             if (Descriptives.variance(datasetDsPruned) > 0 && Descriptives.variance(datasetExpPruned) > 0) {
+                                                if (permutationStrategy != PermutationStrategy.MATCHED && permutation != -1) {
+                                                    long currentseed = 0;
+                                                    if (permutationStrategy == PermutationStrategy.SEMIRANDOM) {
+                                                        currentseed = seed[permutation];
+                                                    } else {
+                                                        Random rand = new Random();
+                                                        currentseed = rand.nextLong();
+                                                    }
+                                                    Util.shuffleArray(datasetExpPruned, currentseed); // shuffle the genotypes instead
+                                                    // shuffle the weights similarly..
+                                                    if (datasetWeightCopy != null) {
+                                                        Util.shuffleArray(datasetWeightCopy, currentseed);
+                                                    }
 
+                                                }
+
+                                                // re-rank data if there is missing data? original EMP does not, but it is the right thing to do...
+                                                if (rankData && datasetExpPruned.length != datasetExp.length) {
+                                                    RankArray ranker = new RankArray();
+                                                    datasetExpPruned = ranker.rank(datasetExpPruned, true);
+                                                }
+
+                                                // perform correlation
                                                 dsWithMinObs++;
                                                 // count the number of alleles, used later to estimate Beta and SE from MetaZ
                                                 if (permutation == -1) {
@@ -988,7 +991,7 @@ public class MbQTL2Parallel extends QTLAnalysis {
                 snpIterator.close();
             } // end if annotation not null
 
-            pb.iterateSynchedPrint();
+            pb.iterateSynched();
         } // end iterate group's genes
 
         if (nrTestsPerformed == 0) {

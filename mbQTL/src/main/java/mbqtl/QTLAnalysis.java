@@ -252,7 +252,7 @@ public class QTLAnalysis {
         if (datasets.length < minNumberOfDatasets) {
             System.out.println("Warning: min number of datasets " + minNumberOfDatasets + " smaller than actual number of datasets " + datasets.length);
             System.out.println("Setting variable to match.");
-            minNumberOfDatasets = datasets.length;
+            this.minNumberOfDatasets = datasets.length;
         }
         System.out.println("Initialization done.");
         System.out.println();
