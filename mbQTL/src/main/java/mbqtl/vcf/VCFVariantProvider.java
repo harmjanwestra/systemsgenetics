@@ -79,7 +79,8 @@ public class VCFVariantProvider implements Iterator<VCFVariant> {
 //                    // Note: code below is not correct, because it overwrites datasets that are outside of scope of the thread that runs this code
 //                    // can cause race conditions!!!!
 //                    String actualVCFFile = origvcfFile.replace("CHR", "" + geneChromosomeObj.getNumber());
-////						updateDatasets(actualVCFFile); // assume the order of samples is equal across files, for now...
+
+    /// /						updateDatasets(actualVCFFile); // assume the order of samples is equal across files, for now...
 //                    tabix = new VCFTabix(actualVCFFile);
 //                    prevchr = geneChromosomeObj.getNumber();
 //                } else {
@@ -94,7 +95,6 @@ public class VCFVariantProvider implements Iterator<VCFVariant> {
 //        }
 //
 //    }
-
     public void close() throws IOException {
 
         if (tabix != null) {
@@ -111,10 +111,13 @@ public class VCFVariantProvider implements Iterator<VCFVariant> {
     private void initTabix(Feature queryRegion) throws IOException {
 
         if (!hasTemplateStr) {
-            if (Gpio.exists(origvcfFile)) {
+//            System.out.println("Option 1");
+            if (Gpio.exists(origvcfFile) && tabix == null) {
+//                System.out.println("Option 1: open new file handle");
                 tabix = new VCFTabix(origvcfFile);
             }
         } else {
+//            System.out.println("Option 2");
             int queryChrNumber = queryRegion.getChromosome().getNumber();
             if (queryChrNumber != prevChr && queryChrNumber < vcfFilenames.length) {
                 String actualVCFFile = vcfFilenames[queryChrNumber];
@@ -127,9 +130,11 @@ public class VCFVariantProvider implements Iterator<VCFVariant> {
             } else {
                 tabix = null;
             }
+//            System.out.println("Option 2: " + (tabix == null));
         }
 
         if (tabix != null) {
+//            System.out.println("Tabix: get variants: " + queryRegion);
             currentSNPIterator = tabix.getVariants(queryRegion, genotypeSamplesToInclude, snpLimitSetForGene);
         }
     }
@@ -159,6 +164,7 @@ public class VCFVariantProvider implements Iterator<VCFVariant> {
     public boolean hasNext() {
         try {
             if (snpFeaturesForGene != null) {
+//                System.out.println(snpFeatureCounter);
                 return snpFeatureCounter < snpFeaturesForGene.size();
             } else if (analysisType == AnalysisType.CIS) {
                 if (currentSNPIterator == null) {
@@ -194,11 +200,20 @@ public class VCFVariantProvider implements Iterator<VCFVariant> {
                 while (snpFeatureCounter < snpFeaturesForGene.size()) {
                     try {
                         SNPFeature feature = snpFeaturesForGene.get(snpFeatureCounter);
+//                        System.out.println("Looking for feature: " + snpFeatureCounter + "\t" + feature.getName());
                         initTabix(feature);
                         if (currentSNPIterator != null) {
                             while (currentSNPIterator.hasNext()) {
                                 VCFVariant variant = currentSNPIterator.next();
+//                                if (variant != null) {
+//                                    System.out.println("VCF has variant: " + snpFeatureCounter + "\t" + variant.getId());
+//                                }
                                 if (variant != null && variant.getId().equals(feature.getName())) {
+//                                    System.out.println("Matching ID: " + variant);
+//                                    System.out.println(variant.getHwep());
+//                                    System.out.println(variant.getMAF());
+//                                    System.out.println(variant.getCallrate());
+                                    snpFeatureCounter++;
                                     return variant;
                                 }
                             }

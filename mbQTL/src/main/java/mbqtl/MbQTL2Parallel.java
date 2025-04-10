@@ -404,12 +404,14 @@ public class MbQTL2Parallel extends QTLAnalysis {
                         if (snpid != null) {
                             int snppos = snpAnnotation.getPos(snpid);
                             Chromosome snpchr = snpAnnotation.getChr(snpid);
-                            SNPFeature f = new SNPFeature(snpchr, snppos, pos + 1);
+                            SNPFeature f = new SNPFeature(snpchr, snppos, snppos + 1);
                             f.setName(snp);
                             snpLimitSetForGeneFeatures.add(f);
                         }
                     }
                     snpLimitSetForGeneFeatures.sort(new FeatureComparator()); // sort by position
+//                    System.out.println();
+//                    System.out.println(snpLimitSetForGeneFeatures.size() + " SNPs for gene: " + gene);
                 }
 
                 VCFVariantProvider snpIterator = new VCFVariantProvider(cisRegion, analysisType, origvcfFile, genotypeSamplesToInclude, snpLimitSetForGene, snpLimitSetForGeneFeatures);
