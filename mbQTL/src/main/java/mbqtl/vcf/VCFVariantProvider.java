@@ -28,6 +28,7 @@ public class VCFVariantProvider implements Iterator<VCFVariant> {
     private int prevChr = -1;
     private int nextStreamingChr = 1;
     private int snpFeatureCounter = 0;
+    private boolean debug = false;
 
     public VCFVariantProvider(Feature region,
                               AnalysisType analysisType,
@@ -65,6 +66,10 @@ public class VCFVariantProvider implements Iterator<VCFVariant> {
         }
 
 
+    }
+
+    public void enableDebug() {
+        this.debug = true;
     }
 
 
@@ -110,15 +115,25 @@ public class VCFVariantProvider implements Iterator<VCFVariant> {
     // function for random access
     private void initTabix(Feature queryRegion) throws IOException {
 
+        if (debug) {
+            System.out.println("Init tabix, query: " + queryRegion.toString());
+        }
         if (!hasTemplateStr) {
+            if (debug) {
+                System.out.println("VCF init: Option 1 - single file");
+            }
 //            System.out.println("Option 1");
             if (Gpio.exists(origvcfFile) && tabix == null) {
 //                System.out.println("Option 1: open new file handle");
                 tabix = new VCFTabix(origvcfFile);
             }
         } else {
-//            System.out.println("Option 2");
+            if (debug) {
+                System.out.println("VCF init: Option 2 - multiple files");
+            }
             int queryChrNumber = queryRegion.getChromosome().getNumber();
+
+            // only open file handle when not already open and variant chr is different from previously queried variant
             if (queryChrNumber != prevChr && queryChrNumber < vcfFilenames.length) {
                 String actualVCFFile = vcfFilenames[queryChrNumber];
                 if (actualVCFFile != null) {
@@ -128,13 +143,22 @@ public class VCFVariantProvider implements Iterator<VCFVariant> {
                     tabix = null;
                 }
             } else {
-                tabix = null;
+                if(debug){
+                    System.out.println("VCF init: Option 2 - tabix handle already open.");
+                }
             }
-//            System.out.println("Option 2: " + (tabix == null));
+//            else {
+//                tabix = null;
+//            }
+            if (debug) {
+                System.out.println("Option 2 tabix handle is null for chr " + queryRegion.getChromosome().getNumber() + ": " + (tabix == null) + "\tQuery: " + queryRegion.toString());
+            }
         }
 
         if (tabix != null) {
-//            System.out.println("Tabix: get variants: " + queryRegion);
+            if (debug) {
+                System.out.println("Tabix: get variants: " + queryRegion);
+            }
             currentSNPIterator = tabix.getVariants(queryRegion, genotypeSamplesToInclude, snpLimitSetForGene);
         }
     }
@@ -165,6 +189,9 @@ public class VCFVariantProvider implements Iterator<VCFVariant> {
         try {
             if (snpFeaturesForGene != null) {
 //                System.out.println(snpFeatureCounter);
+                if (debug) {
+                    System.out.println("HasNext, current ctr:" + snpFeatureCounter);
+                }
                 return snpFeatureCounter < snpFeaturesForGene.size();
             } else if (analysisType == AnalysisType.CIS) {
                 if (currentSNPIterator == null) {
@@ -200,19 +227,35 @@ public class VCFVariantProvider implements Iterator<VCFVariant> {
                 while (snpFeatureCounter < snpFeaturesForGene.size()) {
                     try {
                         SNPFeature feature = snpFeaturesForGene.get(snpFeatureCounter);
-//                        System.out.println("Looking for feature: " + snpFeatureCounter + "\t" + feature.getName());
+                        if (debug) {
+                            System.out.println("Looking for feature: " + snpFeatureCounter + "\t" + feature.getName());
+                        }
                         initTabix(feature);
+                        if (debug) {
+                            System.out.println("Current snp iterator is not null: " + ((currentSNPIterator != null)));
+                        }
                         if (currentSNPIterator != null) {
+                            if (debug) {
+                                System.out.println("Current snp iterator has next: " + (currentSNPIterator.hasNext()));
+                            }
                             while (currentSNPIterator.hasNext()) {
                                 VCFVariant variant = currentSNPIterator.next();
-//                                if (variant != null) {
-//                                    System.out.println("VCF has variant: " + snpFeatureCounter + "\t" + variant.getId());
-//                                }
+                                if (debug) {
+                                    if (variant != null) {
+                                        System.out.println("VCF has variant: " + snpFeatureCounter + "\t" + variant.getId() + "\t" + feature.toString());
+                                    } else {
+                                        System.out.println("VCF returns null variant for: " + snpFeatureCounter + "\t" + feature.getName() + "\t" + feature.toString());
+                                    }
+                                }
+//
                                 if (variant != null && variant.getId().equals(feature.getName())) {
-//                                    System.out.println("Matching ID: " + variant);
-//                                    System.out.println(variant.getHwep());
-//                                    System.out.println(variant.getMAF());
-//                                    System.out.println(variant.getCallrate());
+                                    if (debug) {
+                                        System.out.println("Matching ID: " + variant);
+                                        System.out.println("Feature ctr: " + snpFeatureCounter);
+                                        System.out.println(variant.getHwep());
+                                        System.out.println(variant.getMAF());
+                                        System.out.println(variant.getCallrate());
+                                    }
                                     snpFeatureCounter++;
                                     return variant;
                                 }
@@ -221,7 +264,11 @@ public class VCFVariantProvider implements Iterator<VCFVariant> {
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
+
                     snpFeatureCounter++;
+                    if (debug) {
+                        System.out.println("Adding to snpfeaturectr: " + snpFeatureCounter);
+                    }
                 }
             } else if (analysisType == AnalysisType.CIS) {
                 return currentSNPIterator.next();

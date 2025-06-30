@@ -280,6 +280,9 @@ public class MbQTL2Parallel extends QTLAnalysis {
                 Gene obj = geneAnnotation.getGene(expressionData.genes[g]);
                 if (obj != null) {
                     geneObjs.add(obj);
+                } else {
+                    System.out.println("Gene " + g + " / " + expressionData.genes[g] + " has no annotation.");
+                    System.exit(-1);
                 }
             }
             geneObjs.sort(new FeatureComparator());
@@ -414,7 +417,28 @@ public class MbQTL2Parallel extends QTLAnalysis {
 //                    System.out.println(snpLimitSetForGeneFeatures.size() + " SNPs for gene: " + gene);
                 }
 
+
                 VCFVariantProvider snpIterator = new VCFVariantProvider(cisRegion, analysisType, origvcfFile, genotypeSamplesToInclude, snpLimitSetForGene, snpLimitSetForGeneFeatures);
+//                if (gene.equals("ENSG00000134152.11")) {
+//                    System.out.println("----------");
+//                    System.out.println(snpLimitSetForGene.size() + "\t" + snpLimitSetForGeneFeatures.size());
+//                    System.out.println("----------");
+//
+//                    int vctr = 0;
+//                    snpIterator.enableDebug();
+//                    while (snpIterator != null && snpIterator.hasNext()) {
+//                        VCFVariant variantTmp = snpIterator.next();
+//                        vctr += 1;
+//                    }
+//                    System.out.println();
+//                    System.out.println("ENSG00000134152.11\t" + vctr);
+//                    System.out.println();
+//
+//                    System.exit(-1);
+//
+//
+//                }
+
 //                Iterator<VCFVariant> snpIterator = variantProvider.provide();
 
 //                Iterator<VCFVariant> snpIterator = null;
@@ -441,6 +465,7 @@ public class MbQTL2Parallel extends QTLAnalysis {
 //                }
 //
 //
+                int tmpvarctr = 0;
                 // TODO: can the VCF parsing be cached somehow?
                 while (snpIterator != null && snpIterator.hasNext()) {
                     snpsParsed++;
@@ -454,6 +479,7 @@ public class MbQTL2Parallel extends QTLAnalysis {
 
                     ArrayList<VCFVariant> variants = new ArrayList<>();
                     if (variantTmp != null) {
+//                        System.out.println(gene+"\t"+variantTmp.getId());
                         if ((analysisType == AnalysisType.TRANS || analysisType == AnalysisType.CISTRANS)) {
                             isTransVariant = (!cisRegion.overlaps(variantTmp.asFeature()));
                         }
@@ -463,6 +489,7 @@ public class MbQTL2Parallel extends QTLAnalysis {
 //                            System.out.println("Got it!");
 //                            splitMultiAllelics = true;
 //                        }
+
                         boolean variantOk = false;
                         if (analysisType == AnalysisType.CISTRANS) {
                             variantOk = true;
@@ -471,6 +498,12 @@ public class MbQTL2Parallel extends QTLAnalysis {
                         } else if (!isTransVariant && analysisType == AnalysisType.CIS) {
                             variantOk = true;
                         }
+
+
+//                        if (gene.equals("ENSG00000134152.11")) {
+//                            System.out.println(gene + "\t" + tmpvarctr + "\t" + variantTmp.getId() + "\t" + isTransVariant + "\t" + variantOk);
+//                            tmpvarctr++;
+//                        }
 
                         if (variantOk) {
                             if (!variantTmp.isMultiallelic()) {
