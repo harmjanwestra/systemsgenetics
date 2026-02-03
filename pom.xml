@@ -15,6 +15,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
     </properties>
 <!--    Added the following dependencies to circumvent difficulties when using the cobertura-maven-plugin
         that is used for determining the covarage (this is used on the Jenkins server). -->
@@ -43,13 +45,6 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.8.1</version>
-                    <configuration>
-                        <source>1.6</source>
-                        <target>1.6</target>
-                        <compilerArguments>
-                            <Xlint/>
-                        </compilerArguments>
-                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -61,7 +56,6 @@
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <version>3.1.1</version>
                     <configuration>
-                        <additionalparam>-Xdoclint:none</additionalparam>
                     </configuration>
                 </plugin>
             </plugins>
@@ -79,6 +73,7 @@
             <url>https://repo1.maven.org/maven2/</url>
         </repository>
     </repositories>
+<<<<<<< HEAD
     <reporting>
         <plugins>
             <!-- code coverage -->
@@ -111,6 +106,8 @@
 <!--            </plugin>-->
         </plugins>
     </reporting>
+=======
+>>>>>>> eef846063339a42a66c9e2e4d49fc81013e062ce
     <modules>
         <module>genetica-libraries</module>
         <module>imputation-tool</module>
@@ -131,5 +128,6 @@
         <module>Downstreamer</module>
         <module>PatricksToolbox</module>
         <module>mbQTL</module>
+        <module>Datg-tool</module>
     </modules>
 </project>
