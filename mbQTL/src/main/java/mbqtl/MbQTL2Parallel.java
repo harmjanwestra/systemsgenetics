@@ -48,6 +48,8 @@ public class MbQTL2Parallel extends QTLAnalysis {
     private boolean testOnlySNPs = false;
     private double[] weightData = null;
     private PermutationStrategy permutationStrategy = PermutationStrategy.MATCHED;
+    private double minoutputpvalue = 2;
+
 
     public MbQTL2Parallel(String vcfFile, int chromosome, String linkfile, String snpLimitFile, String geneLimitFile, String snpGeneLimitFile, String geneExpressionDataFile, String geneAnnotationFile, int minNumberOfDatasets, int minObservations, String outfile) throws IOException {
         super(vcfFile, chromosome, linkfile, snpLimitFile, geneLimitFile, snpGeneLimitFile, geneExpressionDataFile, geneAnnotationFile, minNumberOfDatasets,
@@ -138,6 +140,9 @@ public class MbQTL2Parallel extends QTLAnalysis {
         System.out.println("Analysis type:\t" + analysisType);
         System.out.println("Correlation method:\t" + statisticalTest);
         System.out.println("Permutation strategy:\t" + permutationStrategy);
+        if (outputAll) {
+            System.out.println("Minimum output pvalue: \t" + minoutputpvalue);
+        }
         System.out.println();
 
         Chromosome chromosomeObj = Chromosome.parseChr("" + chromosome);
@@ -962,7 +967,7 @@ public class MbQTL2Parallel extends QTLAnalysis {
                                             }
                                         }
 
-                                        if (outputAll) { // this code only runs when in the 'not-permuted' iteration
+                                        if (outputAll && metaP <= minoutputpvalue) { // this code only runs when in the 'not-permuted' iteration
                                             String snpAlleles = variant.getAlleles()[0] + "/" + variant.getAlleles()[1];
                                             String snpEffectAllele = variant.getAlleles()[1];
 
@@ -1237,6 +1242,11 @@ public class MbQTL2Parallel extends QTLAnalysis {
             }
 
         }
+    }
+
+    public void setMinimumOutputPvalue(double minoutputpvalue) {
+        this.minoutputpvalue = minoutputpvalue;
+
     }
 
     private class PruneObj {

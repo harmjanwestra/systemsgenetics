@@ -66,6 +66,7 @@ public class Main {
         options.addOption("onlytestsnps", "onlytestsnps", false, "Only test SNPs, skip indels, STRs, etc. [default: test all variants in VCF passing QC]");
         options.addOption("correlationweights", "correlationweights", true, "Weight the correlation for these weights. Format: sample, weight, tab-separated");
         options.addOption("permutationstrategy", "permutationstrategy", true, "Permutation strategy [matched|random|semirandom]: use same permuted order for each variant and gene per permutation (matched), use completely random assignments (random), or somewhere in between (semirandom). Only random and semirandom can be used if there is missingness in both genotype and genotype data.");
+        options.addOption("minoutputpvalue", "minoutputpvalue", true, "Minimum significance before output is considered for --outputall");
 
         try {
             CommandLineParser parser = new DefaultParser();
@@ -134,6 +135,11 @@ public class Main {
             String input = null;
             if (cmd.hasOption("input")) {
                 input = cmd.getOptionValue("input");
+            }
+
+            double minoutputpvalue = 2;
+            if (cmd.hasOption("minoutputpvalue")) {
+                minoutputpvalue = Double.parseDouble(cmd.getOptionValue("minoutputpvalue"));
             }
 
             System.out.println(mode);
@@ -466,6 +472,10 @@ public class Main {
 
                         if (cmd.hasOption("correlationweights")) {
                             bQTL.setCorrelationWeights(cmd.getOptionValue("correlationweights"));
+                        }
+
+                        if (cmd.hasOption("minoutputpvalue")) {
+                            bQTL.setMinimumOutputPvalue(minoutputpvalue);
                         }
 
                         if (cmd.hasOption("permutationstrategy")) {
