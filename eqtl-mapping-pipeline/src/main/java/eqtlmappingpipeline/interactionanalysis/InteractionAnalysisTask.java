@@ -7,10 +7,6 @@ package eqtlmappingpipeline.interactionanalysis;
 import cern.jet.random.tdouble.StudentT;
 import org.apache.commons.math3.linear.SingularMatrixException;
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
-import org.rosuda.REngine.REXPMismatchException;
-import org.rosuda.REngine.REngineException;
-import org.rosuda.REngine.Rserve.RConnection;
-import org.rosuda.REngine.Rserve.RserveException;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.trityper.SNP;
 import umcg.genetica.io.trityper.TriTyperExpressionData;
@@ -167,78 +163,78 @@ public class InteractionAnalysisTask implements Callable<InteractionAnalysisResu
 				double rsquared = 0;
 
 				if (sandwich) {
-					RConnection rConnection = null;
-					// this code is very suboptimal and is here for validation purposes only anyway
-					try {
-						rConnection = new RConnection();
-						rConnection.voidEval("library(sandwich)");
-					} catch (RserveException ex) {
-						System.err.println(ex.getMessage());
-						rConnection = null;
-					}
-
-					if (rConnection == null) {
-						System.err.println("Error: using R connection but none found");
-						return null;
-					}
-
-					try {
-						if (rConnection.isConnected()) {
-							double[] olsY = new double[nrCalled]; //Ordinary least squares: Our gene expression
-							double[] olsX = new double[nrCalled];
-							double[] covariateValues = new double[nrCalled];
-//No interaction term, linear model: y ~ a * SNP + b * CellCount + c
-//                                double[][] olsXFullWithInteraction = new double[nrCalled][3];       //With interaction term, linear model: y ~ a * SNP + b * CellCount + c + d * SNP * CellCount
-							int itr = 0;
-							for (int s = 0; s < valsX.length; s++) {
-								double genotype = valsX[s];
-								if (genotype != -1 && !Double.isNaN(tmpVarCelCount[s])) {
-									if (signInteractionEffectDirection == -1) {
-										genotype = 2 - genotype;
-									}
-									covariateValues[itr] = tmpVarCelCount[s];
-									olsY[itr] = valsY[s];
-									olsX[itr] = genotype;
-									itr++;
-								}
-							}
-
-							double corr = JSci.maths.ArrayMath.correlation(olsX, olsY);
-							mainZ = Correlation.convertCorrelationToZScore(olsX.length, corr);
-
-
-							rConnection.assign("y", olsY);
-							rConnection.assign("x", olsX);
-							rConnection.assign("z", covariateValues);
-							rConnection.voidEval("interaction <- x*z");
-							rConnection.voidEval("m <- lm(y ~ x + z + interaction)");
-							rConnection.voidEval("modelsummary <- summary(m)");
-
-							rConnection.voidEval("m2 <- sqrt(diag(vcovHC(m, type = 'HC0')))"); // robust covariance model
-
-							if (tDistColt == null) {
-								randomEngine = new cern.jet.random.tdouble.engine.DRand();
-								tDistColt = new cern.jet.random.tdouble.StudentT(olsY.length - 4, randomEngine);
-							}
-
-							betaInteraction = rConnection.eval("modelsummary$coefficients[4,1]").asDouble();
-							seInteraction = rConnection.eval("as.numeric(m2[4])").asDouble();
-							betaSNP = rConnection.eval("modelsummary$coefficients[2,1]").asDouble();
-							seSNP = rConnection.eval("modelsummary$coefficients[2,2]").asDouble();
-							betaCovariate = rConnection.eval("modelsummary$coefficients[3,1]").asDouble();
-							seCovariate = rConnection.eval("modelsummary$coefficients[3,2]").asDouble();
-							rsquared = rConnection.eval("modelsummary$r.squared").asDouble();
-
-							rConnection.close();
-						} else {
-							System.err.println("ERROR: R is not connected.");
-						}
-
-					} catch (REngineException ex) {
-						System.err.println(ex.getMessage());
-					} catch (REXPMismatchException ex) {
-						System.err.println(ex.getMessage());
-					}
+//					RConnection rConnection = null;
+//					// this code is very suboptimal and is here for validation purposes only anyway
+//					try {
+//						rConnection = new RConnection();
+//						rConnection.voidEval("library(sandwich)");
+//					} catch (RserveException ex) {
+//						System.err.println(ex.getMessage());
+//						rConnection = null;
+//					}
+//
+//					if (rConnection == null) {
+//						System.err.println("Error: using R connection but none found");
+//						return null;
+//					}
+//
+//					try {
+//						if (rConnection.isConnected()) {
+//							double[] olsY = new double[nrCalled]; //Ordinary least squares: Our gene expression
+//							double[] olsX = new double[nrCalled];
+//							double[] covariateValues = new double[nrCalled];
+////No interaction term, linear model: y ~ a * SNP + b * CellCount + c
+////                                double[][] olsXFullWithInteraction = new double[nrCalled][3];       //With interaction term, linear model: y ~ a * SNP + b * CellCount + c + d * SNP * CellCount
+//							int itr = 0;
+//							for (int s = 0; s < valsX.length; s++) {
+//								double genotype = valsX[s];
+//								if (genotype != -1 && !Double.isNaN(tmpVarCelCount[s])) {
+//									if (signInteractionEffectDirection == -1) {
+//										genotype = 2 - genotype;
+//									}
+//									covariateValues[itr] = tmpVarCelCount[s];
+//									olsY[itr] = valsY[s];
+//									olsX[itr] = genotype;
+//									itr++;
+//								}
+//							}
+//
+//							double corr = JSci.maths.ArrayMath.correlation(olsX, olsY);
+//							mainZ = Correlation.convertCorrelationToZScore(olsX.length, corr);
+//
+//
+//							rConnection.assign("y", olsY);
+//							rConnection.assign("x", olsX);
+//							rConnection.assign("z", covariateValues);
+//							rConnection.voidEval("interaction <- x*z");
+//							rConnection.voidEval("m <- lm(y ~ x + z + interaction)");
+//							rConnection.voidEval("modelsummary <- summary(m)");
+//
+//							rConnection.voidEval("m2 <- sqrt(diag(vcovHC(m, type = 'HC0')))"); // robust covariance model
+//
+//							if (tDistColt == null) {
+//								randomEngine = new cern.jet.random.tdouble.engine.DRand();
+//								tDistColt = new cern.jet.random.tdouble.StudentT(olsY.length - 4, randomEngine);
+//							}
+//
+//							betaInteraction = rConnection.eval("modelsummary$coefficients[4,1]").asDouble();
+//							seInteraction = rConnection.eval("as.numeric(m2[4])").asDouble();
+//							betaSNP = rConnection.eval("modelsummary$coefficients[2,1]").asDouble();
+//							seSNP = rConnection.eval("modelsummary$coefficients[2,2]").asDouble();
+//							betaCovariate = rConnection.eval("modelsummary$coefficients[3,1]").asDouble();
+//							seCovariate = rConnection.eval("modelsummary$coefficients[3,2]").asDouble();
+//							rsquared = rConnection.eval("modelsummary$r.squared").asDouble();
+//
+//							rConnection.close();
+//						} else {
+//							System.err.println("ERROR: R is not connected.");
+//						}
+//
+//					} catch (REngineException ex) {
+//						System.err.println(ex.getMessage());
+//					} catch (REXPMismatchException ex) {
+//						System.err.println(ex.getMessage());
+//					}
 
 				} else {
 

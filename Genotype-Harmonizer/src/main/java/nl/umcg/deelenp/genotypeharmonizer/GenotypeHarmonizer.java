@@ -403,7 +403,18 @@ class GenotypeHarmonizer {
 
 			try {
 				System.out.println("Beginning alignment");
-				aligedInputData = aligner.alignToRef(inputData, refData, parameters.getMinLdToIncludeAlign(), parameters.getMinSnpsToAlignOn(), parameters.getFlankSnpsToConsider(), parameters.isLdCheck(), parameters.isUpdateId(), parameters.isKeep(), parameters.getSnpUpdateFile(), parameters.getMaxMafForMafAlignment(), parameters.getSnpLogFile(), parameters.getMatchRefAllele());
+				aligedInputData = aligner.alignToRef(inputData,
+						refData,
+						parameters.getMinLdToIncludeAlign(),
+						parameters.getMinSnpsToAlignOn(),
+						parameters.getFlankSnpsToConsider(),
+						parameters.isLdCheck(),
+						parameters.isUpdateId(),
+						parameters.isKeep(),
+						parameters.getSnpUpdateFile(),
+						parameters.getMaxMafForMafAlignment(),
+						parameters.getSnpLogFile(),
+						parameters.getMatchRefAllele());
 			} catch (LdCalculatorException e) {
 				System.err.println("Error in LD calculation: " + e.getMessage());
 				LOGGER.fatal("Error in LD calculation: " + e.getMessage(), e);

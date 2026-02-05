@@ -74,7 +74,8 @@
         <dependency>
             <groupId>net.sourceforge.parallelcolt</groupId>
             <artifactId>parallelcolt</artifactId>
-            <version>0.11.2-SNAPSHOT</version>
+            <version>0.11.4</version>
+<!--            <version>0.11.2-SNAPSHOT</version>-->
             <type>jar</type>
         </dependency>
         <dependency>

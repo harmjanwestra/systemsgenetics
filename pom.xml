@@ -72,8 +72,13 @@
             <name>Maven Central</name>
             <url>https://repo1.maven.org/maven2/</url>
         </repository>
+        <repository>
+            <id>SciJava Public</id>
+            <name>SciJava Public</name>
+            <url>https://maven.scijava.org/content/repositories/public/</url>
+        </repository>
     </repositories>
-<<<<<<< HEAD
+
     <reporting>
         <plugins>
             <!-- code coverage -->
@@ -106,8 +111,7 @@
 <!--            </plugin>-->
         </plugins>
     </reporting>
-=======
->>>>>>> eef846063339a42a66c9e2e4d49fc81013e062ce
+
     <modules>
         <module>genetica-libraries</module>
         <module>imputation-tool</module>

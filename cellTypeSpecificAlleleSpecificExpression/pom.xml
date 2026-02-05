@@ -25,11 +25,18 @@
             <artifactId>htsjdk</artifactId>
             <version>1.129</version>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.googlecode.efficient-java-matrix-library</groupId>-->
+<!--            <artifactId>main</artifactId>-->
+<!--            <version>0.25</version>-->
+<!--&lt;!&ndash;            <version>0.26-SNAPSHOT</version>&ndash;&gt;-->
+<!--            <type>jar</type>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.googlecode.efficient-java-matrix-library</groupId>
-            <artifactId>main</artifactId>
-            <version>0.26-SNAPSHOT</version>
-            <type>jar</type>
+            <artifactId>ejml</artifactId>
+            <version>0.25</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
