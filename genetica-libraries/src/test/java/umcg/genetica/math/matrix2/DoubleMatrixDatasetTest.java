@@ -434,11 +434,9 @@ public class DoubleMatrixDatasetTest {
         dataset.setElementQuick(2, 2, 6.66);
         dataset.setElementQuick(2, 3, -12.2);
 
-        dataset.saveBinary("D:\\test.datg", "Title", "Rows", "Cols");
-        dataset.save("D:\\test.txt");
-
-
-
+        dataset.saveBinary( tmpOutputFolder.getAbsolutePath() + fs + "test.datg", "Title", "Rows", "Cols");
+        dataset.save(tmpOutputFolder.getAbsolutePath() + fs + "test.txt");
+        
     }
 
     @Test
