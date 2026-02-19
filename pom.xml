@@ -20,23 +20,23 @@
     </properties>
 <!--    Added the following dependencies to circumvent difficulties when using the cobertura-maven-plugin
         that is used for determining the covarage (this is used on the Jenkins server). -->
-    <dependencies>
-        <dependency>
-            <groupId>net.sourceforge.cobertura</groupId>
-            <artifactId>cobertura</artifactId>
-            <version>2.1.1</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>ch.qos.logback</groupId>
-                    <artifactId>logback-classic</artifactId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>tools</artifactId>
-                    <groupId>com.sun</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-    </dependencies>
+<!--    <dependencies>-->
+<!--        <dependency>-->
+<!--            <groupId>net.sourceforge.cobertura</groupId>-->
+<!--            <artifactId>cobertura</artifactId>-->
+<!--            <version>2.1.1</version>-->
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <groupId>ch.qos.logback</groupId>-->
+<!--                    <artifactId>logback-classic</artifactId>-->
+<!--                </exclusion>-->
+<!--                <exclusion>-->
+<!--                    <artifactId>tools</artifactId>-->
+<!--                    <groupId>com.sun</groupId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
+<!--        </dependency>-->
+<!--    </dependencies>-->
     <build>
         <pluginManagement>
             <plugins>
@@ -114,9 +114,9 @@
 
     <modules>
         <module>genetica-libraries</module>
+        <module>Genotype-IO</module>
         <module>imputation-tool</module>
         <module>eqtl-mapping-pipeline</module>
-        <module>Genotype-IO</module>
         <module>GadoCommandline</module>
         <module>Genotype-Harmonizer</module>
         <module>eqtl-functional-enrichment</module>
@@ -133,5 +133,6 @@
         <module>PatricksToolbox</module>
         <module>mbQTL</module>
         <module>Datg-tool</module>
+        <module>TransEQTLCrossMap</module>
     </modules>
 </project>
