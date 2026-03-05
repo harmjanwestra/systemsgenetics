@@ -751,9 +751,17 @@ public class MbQTL2Parallel extends QTLAnalysis {
                                                 }
 
                                                 // re-rank data if there is missing data? original EMP does not, but it is the right thing to do...
-                                                if (rankData && datasetExpPruned.length != datasetExp.length) {
+                                                if (rankData) {
+
                                                     RankArray ranker = new RankArray();
-                                                    datasetExpPruned = ranker.rank(datasetExpPruned, true);
+                                                    if(datasetExpPruned.length != datasetExp.length) {
+                                                        datasetExpPruned = ranker.rank(datasetExpPruned, true);
+                                                    }
+
+                                                    // also rank genotypes if no hard calls are used
+                                                    if(!useHardGenotypeCalls){
+                                                        datasetDsPruned = ranker.rank(datasetDsPruned, true);
+                                                    }
                                                 }
 
                                                 // perform correlation

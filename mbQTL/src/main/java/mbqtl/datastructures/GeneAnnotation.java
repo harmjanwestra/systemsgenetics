@@ -19,9 +19,7 @@ public class GeneAnnotation {
     HashMap<String, Integer> geneIndex = new HashMap<>();
 
     public GeneAnnotation(String geneAnnotationFile, int chromosome, Set<String> geneLimitSet) throws IOException {
-
         load(geneAnnotationFile, chromosome, geneLimitSet);
-
     }
 
     private void load(String geneAnnotationFile, int limitChromosome, Set<String> geneLimitSet) throws IOException {

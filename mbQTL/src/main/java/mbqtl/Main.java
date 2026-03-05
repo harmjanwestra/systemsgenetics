@@ -3,6 +3,7 @@ package mbqtl;
 import mbqtl.enums.AnalysisType;
 import mbqtl.enums.MetaAnalysisMethod;
 import mbqtl.enums.PermutationStrategy;
+import mbqtl.gfx.QTLDotPlot;
 import org.apache.commons.cli.*;
 
 import java.io.IOException;
@@ -13,7 +14,7 @@ public class Main {
 
         Options options = new Options();
 
-        options.addRequiredOption("m", "mode", true, "Mode: [metaqtl|mbqtl|mbqtlsingleds|mbqtlplot|regressqtl|sortfile|determineld|determineldgwas|concatconditional]");
+        options.addRequiredOption("m", "mode", true, "Mode: [mbqtl|qtlplot|qtldotplot|regressqtl|sortfile|determineld|determineldgwas|concatconditional]");
         options.addOption("v", "vcf", true, "Tabix indexed VCF");
         options.addOption("e", "exp", true, "Expression matrix (can be gzipped)");
         options.addOption("eg", "expgroups", true, "File defining groups of phenotypes");
@@ -326,7 +327,20 @@ public class Main {
                         qtlr.run();
                     }
                     break;
-                case "mbqtlplot":
+                case "qtldotplot":
+                    if(input == null || output == null){
+                        System.err.println("Required --input qtlfile.txt.gz --output outputfile.pdf/outputfile.png");
+                    } else {
+                        QTLDotPlot dotplot = new QTLDotPlot();
+                        if(output.endsWith(".png")){
+                            dotplot.draw(input, output, QTLDotPlot.Output.PNG);
+                        } else if(output.endsWith(".pdf")){
+                            dotplot.draw(input, output, QTLDotPlot.Output.PDF);
+                        } else {
+                            System.err.println("Error, please specify .pdf or .png for output file");
+                        }
+                    }
+                case "qtlplot":
                     if (vcf == null || linkfile == null || geneannotation == null || genexpression == null || output == null) {
                         System.err.println("Required: --vcf tabix.vcf.gz, --chr [1-22], --gte linkfile.txt, --annotation annotation.txt.gz, --exp expfile.txt.gz and --out /outdir/ ");
                         System.err.println("Optional: --replacemissinggenotypes, --norank, --minobservations 10 --maf 0.01 --cr 0.95 --hwep 0.001 --ciswindow 1E6 --nrdatasets 2");
@@ -349,6 +363,14 @@ public class Main {
                             bpp.setOutputAll(true);
                         }
 
+                        if (cmd.hasOption("snpannotation")) {
+                            bpp.loadSNPAnnotation(cmd.getOptionValue("snpannotation"));
+                        }
+
+                        if (cmd.hasOption("mingenotypecount")) {
+                            int mingenotypecount = Integer.parseInt(cmd.getOptionValue("mingenotypecount"));
+                            bpp.setMinGenotypeCount(mingenotypecount);
+                        }
 
                         if (cmd.hasOption("maf")) {
                             double t = Double.parseDouble(cmd.getOptionValue("maf"));
@@ -362,7 +384,23 @@ public class Main {
                             double t = Double.parseDouble(cmd.getOptionValue("hwep"));
                             bpp.setHwepthreshold(t);
                         }
+                        if (cmd.hasOption("usehardgenotypecalls")) {
+                            bpp.setUseHardGenotypeCalls();
+                        }
 
+                        if (cmd.hasOption("empzmeta")) {
+                            bpp.setMetaanalysismethod(MetaAnalysisMethod.EMP);
+                        }
+                        if (cmd.hasOption("fisherzmeta")) {
+                            bpp.setMetaanalysismethod(MetaAnalysisMethod.FISHERZFIXED);
+                        }
+                        if (cmd.hasOption("fisherzmetarandom")) {
+                            bpp.setMetaanalysismethod(MetaAnalysisMethod.FISHERZRANDOM);
+                        }
+
+                        if(cmd.hasOption("onlytestsnps")){
+                            bpp.setDontRankGenotypes();
+                        }
                         bpp.plot();
                     }
                     break;

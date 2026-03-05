@@ -29,6 +29,8 @@ public class QTLPanel extends Panel {
     private double z = Double.NaN;
     private double r = Double.NaN;
     private double p = Double.NaN;
+    private double n = Double.NaN;
+    private double maf = Double.NaN;
     private boolean notTested = false;
 
     public QTLPanel(int nrRows, int nrCols) {
@@ -79,22 +81,47 @@ public class QTLPanel extends Panel {
             y = filteredxy[1];
 
             int sumStatOffset = 10;
-            if (rsid != null) {
+            DecimalFormat f = new DecimalFormat("#.###");
+            DecimalFormat pf = new DecimalFormat("0.0E0");
+            if (rsid != null || !Double.isNaN(maf) || !Double.isNaN(n)) {
+                String firstlnStr = "";
                 g2d.setFont(t.getSmallFont());
                 // draw statistics, if defined
                 g2d.setColor(LIGHTGRAY);
                 int xp = x0 + axisMargin + 5;
                 int yp = y0 + axisMargin + sumStatOffset;
-                g2d.drawString(rsid, xp, yp);
+
+                if(rsid!=null){
+                    firstlnStr += rsid;
+                }
+
+                if(!Double.isNaN(n)){
+                    if (firstlnStr.length() > 0) {
+                        firstlnStr += "; n=" + (int) n;
+                    } else {
+                        firstlnStr += "n=" + (int) n;
+                    }
+                }
+
+                if(!Double.isNaN(maf)){
+                    if (firstlnStr.length() > 0) {
+                        firstlnStr += "; maf=" + f.format(maf);
+                    } else {
+                        firstlnStr += "maf=" + f.format(maf);
+                    }
+                }
+
+                g2d.drawString(firstlnStr, xp, yp);
                 sumStatOffset += 10;
             }
+
+
 
             if (!Double.isNaN(r) || !Double.isNaN(z) || !Double.isNaN(p)) {
                 g2d.setFont(t.getSmallFont());
                 // draw statistics, if defined
                 g2d.setColor(LIGHTGRAY);
-                DecimalFormat f = new DecimalFormat("#.###");
-                DecimalFormat pf = new DecimalFormat("0.0E0");
+
                 String sumstatStr = "";
                 if (!Double.isNaN(r)) {
                     sumstatStr += "r=" + f.format(r);
@@ -119,6 +146,12 @@ public class QTLPanel extends Panel {
                         sumstatStr += "p=" + pstr;
                     }
                 }
+
+
+
+
+
+
                 int xp = x0 + axisMargin + 5;
                 int yp = y0 + axisMargin + sumStatOffset;
                 g2d.drawString(sumstatStr, xp, yp);
@@ -486,13 +519,15 @@ public class QTLPanel extends Panel {
         this.dataRange.round();
     }
 
-    public void setDatasetDetails(String datasetName, String geneName, String rsId, double z, double p, double r) {
+    public void setDatasetDetails(String datasetName, String geneName, String rsId, double z, double p, double r, double maf, int n) {
         this.datasetname = datasetName;
         this.genename = geneName;
         this.rsid = rsId;
         this.z = z;
         this.p = p;
         this.r = r;
+        this.n = n;
+        this.maf = maf;
     }
 
     public void setNotTested() {
