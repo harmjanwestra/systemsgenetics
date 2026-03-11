@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.sql.SQLOutput;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -24,7 +23,6 @@ import net.sf.samtools.SAMSequenceDictionary;
 import umcg.genetica.console.ProgressBar;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.enums.Chromosome;
-import umcg.genetica.enums.Strand;
 import umcg.genetica.features.*;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
@@ -344,7 +342,7 @@ public class TransEQTLCrossMapBulk {
     private void exportRefSequences(ArrayList<Triple<String, Chromosome, Integer>> snps,
                                     HashSet<String> cisgeneIds, GTFAnnotation gtfAnnotation, String genomeFasta,
                                     int ciswindowsize, String refwindowoutputdir, boolean overwriteexisitingsnps,
-                                    boolean useCisGeneAsCisWindow) {
+                                    boolean useCisGeneAsCisWindow, TextFile logout) {
         System.out.println("Loading genome from: " + genomeFasta);
         FastaSequenceFile fastaFile = new FastaSequenceFile(new File(genomeFasta), false);
 
@@ -908,7 +906,28 @@ public class TransEQTLCrossMapBulk {
         if (useCisGeneAsCisWindow) {
             closeStr = "LeftMostAlignmentRelativeToWindow";
         }
-        outtf.writeln("CisChr\tBaseWindowStart\tBaseWindowEnd\tCisGene\tCisGeneStart\tCisGeneStop\tVariant\tVariantPos\tVariantReferenceSize\tGene\tGeneSymbol\tGeneChr\tGeneStart\tGeneStop\tGeneStrand\tGeneSameChrAsSNP\tNrReads\tProportionReadsBasesMapped\tProportion\t" + closeStr + "\tBeta\tSe\tZ\tAbsZ");
+        outtf.writeln("CisChr\t" +
+                "BaseWindowStart\t" +
+                "BaseWindowEnd\t" +
+                "ReferenceSize\t" +
+                "CisGene\t" +
+                "CisGeneSymbol\t" +
+                "CisGeneStart\t" +
+                "CisGeneEnd\t" +
+                "CisGeneStrand\t" +
+                "Variant\t" +
+                "VariantPos\t" +
+                "TransGene\t" +
+                "TransGeneSymbol\t" +
+                "TransGeneChr\t" +
+                "TransGeneStart\t" +
+                "TransGeneEnd\t" +
+                "TransGeneStrand\t" +
+                "TransGeneSameChrAsSNPorCisGene\t" +
+                "NrReads\t" +
+                "NumberOfReadBasesMapped\t" +
+                "ProportionReadsMapped\t"
+                + closeStr);
 
         int missingalignments = 0;
         int parsedalignments = 0;
@@ -979,16 +998,23 @@ public class TransEQTLCrossMapBulk {
                     windowstop = cisGeneObj.getStop() + ciswindowsize;
                 }
 
+                if(windowstart < 0){
+                    windowstart = 0;
+                }
+
+
                 outtf.writeln(
                         snpchr
                                 + "\t" + windowstart
                                 + "\t" + windowstop
+                                + "\t" + seqlen
                                 + "\t" + cisgenename
+                                + "\t" + cisGeneObj.getGeneSymbol()
                                 + "\t" + cisGeneObj.getStart()
                                 + "\t" + cisGeneObj.getStop()
+                                + "\t" + cisGeneObj.getStrand()
                                 + "\t" + snpname
                                 + "\t" + snppos
-                                + "\t" + seqlen
                                 + "\t" + transgenename
                                 + "\t" + transGeneObj.getGeneSymbol()
                                 + "\t" + transGeneObj.getChromosome()
