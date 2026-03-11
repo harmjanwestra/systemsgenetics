@@ -22,13 +22,13 @@ public class GeneExpressionData {
 	public HashMap<String, Integer> geneMap;
 
 	public GeneExpressionData(String geneExpressionDataFile, Set<String> geneSelection, Set<String> requestedSamples) throws IOException {
-		System.out.println("Loading expression data from: " + geneExpressionDataFile);
+		System.out.println("Loading expression/phenotype/feature data from: " + geneExpressionDataFile);
 		if (requestedSamples != null) {
 			System.out.println("Max number of samples: " + requestedSamples.size());
 		}
 
 		if (geneSelection != null) {
-			System.out.println("Max number of genes: " + geneSelection.size());
+			System.out.println("Max number of genes/phenotypes/features: " + geneSelection.size());
 		}
 
 		int genecol = 0;
@@ -41,7 +41,7 @@ public class GeneExpressionData {
 
 		String[] header = Strings.whitespace.split(ln);
 		boolean[] includeColumn = new boolean[header.length];
-		ArrayList<String> sampleTmp = new ArrayList();
+		ArrayList<String> sampleTmp = new ArrayList<>();
 
 		for(int i = 1; i < header.length; ++i) {
 			String sample = header[i];
@@ -52,7 +52,7 @@ public class GeneExpressionData {
 		}
 
 		if (sampleTmp.isEmpty()) {
-			System.out.println("No matching samples found in expression data!");
+			System.out.println("No matching samples found in expression/phenotype/feature data!");
 			System.exit(-1);
 		}
 
@@ -60,8 +60,8 @@ public class GeneExpressionData {
 		this.samples = (String[])sampleTmp.toArray(new String[0]);
 		this.sampleMap = Util.hash(sampleTmp);
 		String[] elems = tf.readLineElems(Strings.whitespace);
-		ArrayList<double[]> dataList = new ArrayList();
-		ArrayList<String> genetmp = new ArrayList();
+		ArrayList<double[]> dataList = new ArrayList<>();
+		ArrayList<String> genetmp = new ArrayList<>();
 		int lctr = 0;
 
 		boolean printWarning;
@@ -95,17 +95,17 @@ public class GeneExpressionData {
 
 			++lctr;
 			if (geneSelection != null && dataList.size() == geneSelection.size()) {
-				System.out.print(lctr + " lines parsed, " + dataList.size() + " genes loaded.\r");
+				System.out.print(lctr + " lines parsed, " + dataList.size() + " genes/features/phenotypes loaded.\r");
 				break;
 			}
 
 			if (lctr % 2000 == 0) {
-				System.out.print(lctr + " lines parsed, " + dataList.size() + " genes loaded.\r");
+				System.out.print(lctr + " lines parsed, " + dataList.size() + " genes/features/phenotypes loaded.\r");
 			}
 		}
 
 		tf.close();
-		System.out.println(lctr + " lines parsed, " + dataList.size() + " genes loaded.");
+		System.out.println(lctr + " lines parsed, " + dataList.size() + " genes/features/phenotypes loaded. Done parsing.");
 		if (printWarning) {
 			System.err.println("WARNING: some lines in the file " + geneExpressionDataFile + " have fewer elements than specified in the header. Please check your input for broken lines. Missing elements have been set as missing.");
 		}

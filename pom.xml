@@ -20,23 +20,23 @@
     </properties>
 <!--    Added the following dependencies to circumvent difficulties when using the cobertura-maven-plugin
         that is used for determining the covarage (this is used on the Jenkins server). -->
-    <dependencies>
-        <dependency>
-            <groupId>net.sourceforge.cobertura</groupId>
-            <artifactId>cobertura</artifactId>
-            <version>2.1.1</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>ch.qos.logback</groupId>
-                    <artifactId>logback-classic</artifactId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>tools</artifactId>
-                    <groupId>com.sun</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-    </dependencies>
+<!--    <dependencies>-->
+<!--        <dependency>-->
+<!--            <groupId>net.sourceforge.cobertura</groupId>-->
+<!--            <artifactId>cobertura</artifactId>-->
+<!--            <version>2.1.1</version>-->
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <groupId>ch.qos.logback</groupId>-->
+<!--                    <artifactId>logback-classic</artifactId>-->
+<!--                </exclusion>-->
+<!--                <exclusion>-->
+<!--                    <artifactId>tools</artifactId>-->
+<!--                    <groupId>com.sun</groupId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
+<!--        </dependency>-->
+<!--    </dependencies>-->
     <build>
         <pluginManagement>
             <plugins>
@@ -72,12 +72,51 @@
             <name>Maven Central</name>
             <url>https://repo1.maven.org/maven2/</url>
         </repository>
+        <repository>
+            <id>SciJava Public</id>
+            <name>SciJava Public</name>
+            <url>https://maven.scijava.org/content/repositories/public/</url>
+        </repository>
     </repositories>
+
+    <reporting>
+        <plugins>
+            <!-- code coverage -->
+<!--            <plugin>-->
+<!--                <groupId>org.codehaus.mojo</groupId>-->
+<!--                <artifactId>cobertura-maven-plugin</artifactId>-->
+<!--                <version>2.7</version>-->
+<!--                <configuration>-->
+<!--                    <aggregate>true</aggregate>-->
+<!--                    <formats>-->
+<!--                        <format>html</format>-->
+<!--                        <format>xml</format>-->
+<!--                    </formats>-->
+<!--                    <check/>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
+            <!-- code analysis -->
+<!--            <plugin>-->
+<!--                <groupId>org.codehaus.mojo</groupId>-->
+<!--                <artifactId>findbugs-maven-plugin</artifactId>-->
+<!--                <version>3.0.5</version>-->
+<!--                <configuration>-->
+<!--                    <xmlOutput>true</xmlOutput>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-project-info-reports-plugin</artifactId>-->
+<!--                <version>3.0.0</version>-->
+<!--            </plugin>-->
+        </plugins>
+    </reporting>
+
     <modules>
         <module>genetica-libraries</module>
+        <module>Genotype-IO</module>
         <module>imputation-tool</module>
         <module>eqtl-mapping-pipeline</module>
-        <module>Genotype-IO</module>
         <module>GadoCommandline</module>
         <module>Genotype-Harmonizer</module>
         <module>eqtl-functional-enrichment</module>
@@ -94,5 +133,6 @@
         <module>PatricksToolbox</module>
         <module>mbQTL</module>
         <module>Datg-tool</module>
+        <module>TransEQTLCrossMap</module>
     </modules>
 </project>

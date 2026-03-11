@@ -124,6 +124,10 @@ public class ProgressBar {
 
     }
 
+    public void setPrintEvery(int print){
+        this.printEvery = print;
+    }
+
     public synchronized void iterateSynched() {
         iterations++;
         if (iterations % printEvery == 0) {

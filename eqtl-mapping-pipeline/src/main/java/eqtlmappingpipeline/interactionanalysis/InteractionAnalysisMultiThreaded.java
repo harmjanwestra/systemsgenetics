@@ -9,8 +9,6 @@ import eqtlmappingpipeline.normalization.Normalizer;
 import gnu.trove.map.hash.THashMap;
 import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
 import org.molgenis.genotype.Allele;
-import org.rosuda.REngine.Rserve.RConnection;
-import org.rosuda.REngine.Rserve.RserveException;
 import umcg.genetica.console.ProgressBar;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.graphics.ScatterPlot;
@@ -392,18 +390,18 @@ public class InteractionAnalysisMultiThreaded {
             throw new IllegalArgumentException("ERROR: please provide snpprobe combination file");
         }
 
-        if (robustSE) {
-            System.out.println("Running tests for robust standard errors. Now testing R connection");
-            try {
-                RConnection rConnection = new RConnection();
-                System.out.println("R server found: " + rConnection.getServerVersion());
-                rConnection.close();
-            } catch (RserveException ex) {
-                System.err.println(ex.getMessage());
-                System.err.println("Could not connect to RServe");
-                System.exit(-1);
-            }
-        }
+//        if (robustSE) {
+//            System.out.println("Running tests for robust standard errors. Now testing R connection");
+//            try {
+//                RConnection rConnection = new RConnection();
+//                System.out.println("R server found: " + rConnection.getServerVersion());
+//                rConnection.close();
+//            } catch (RserveException ex) {
+//                System.err.println(ex.getMessage());
+//                System.err.println("Could not connect to RServe");
+//                System.exit(-1);
+//            }
+//        }
 
         out = Gpio.formatAsDirectory(out);
         Gpio.createDir(out);

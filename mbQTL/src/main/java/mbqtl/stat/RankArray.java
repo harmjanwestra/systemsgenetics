@@ -117,7 +117,7 @@ public class RankArray {
     }
 
     private void fixTiesFloat(float[] rank, float[] x) {
-        HashSet<Float> fixedValues = new HashSet();
+        HashSet<Float> fixedValues = new HashSet<>();
 
         for (int i = 0; i < x.length; ++i) {
             for (int j = i + 1; j < x.length; ++j) {

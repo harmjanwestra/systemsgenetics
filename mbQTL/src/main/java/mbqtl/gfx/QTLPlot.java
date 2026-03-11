@@ -5,6 +5,7 @@ import umcg.genetica.graphics.DefaultGraphics;
 import umcg.genetica.graphics.Grid;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class QTLPlot {
 
@@ -34,13 +35,56 @@ public class QTLPlot {
 		}
 
 		Grid g = new Grid(200, 200, 1, 3, 50, 50);
+		ForestplotPanel forestplot = new ForestplotPanel(1,2);
+		ArrayList<ForestPlotEQTL> qtls = new ArrayList<>();
+		ForestPlotEQTL qtl = new ForestPlotEQTL();
+		qtl.error = 0.2;
+		qtl.effectsize=0.5;
+		qtl.samplesize = 1000;
+		qtl.snp = "snp1";
+		qtl.dataset = "Dataset1";
+		qtl.gene = "Gene";
+		qtl.pvalue = 0.00001;
+		qtls.add(qtl);
+		qtl = new ForestPlotEQTL();
+		qtl.error = 0.3;
+		qtl.effectsize=0.3;
+		qtl.samplesize = 1000;
+		qtl.snp = "snp1";
+		qtl.dataset = "Dataset2";
+		qtl.gene = "Gene";
+		qtl.pvalue = 0.00001;
+		qtls.add(qtl);
+		qtl = new ForestPlotEQTL();
+		qtl.error = 0.3;
+		qtl.effectsize=-0.3;
+		qtl.samplesize = 1000;
+		qtl.snp = "snp1";
+		qtl.dataset = "Dataset3";
+		qtl.gene = "Gene";
+		qtl.pvalue = 0.00001;
+		qtls.add(qtl);
+		qtl = new ForestPlotEQTL();
+		qtl.error = 0.2;
+		qtl.effectsize=0.02;
+		qtl.samplesize = 1000;
+		qtl.snp = "snp1";
+		qtl.dataset = "Meta-analysis";
+		qtl.gene = "Gene";
+		qtl.pvalue = 0.00001;
+		qtl.isMeta = true;
+		qtls.add(qtl);
+		forestplot.setData(qtls);
+		forestplot.setStatistic(ForestplotPanel.STATISTIC.BETA);
+		g.addPanel(forestplot);
+
 		QTLPanel panel = new QTLPanel(1, 1);
 		panel.setData(x, y);
 		double z = 5.57855;
 		double p = 1e-10;
 		double r = 0.35797;
 		panel.setAlleles(new String[]{"C", "T"});
-		panel.setDatasetDetails("Dataset1", "ENSG001", "rs0123", z, p, r);
+		panel.setDatasetDetails("Dataset1", "ENSG001", "rs0123", z, p, r, 0.01,x.length);
 		g.addPanel(panel);
 
 		panel = new QTLPanel(1, 1);
@@ -49,19 +93,19 @@ public class QTLPlot {
 		z = 10.0587;
 		p = 1e-232;
 		r = 0.546874;
-		panel.setDatasetDetails("Dataset2", "ENSG001", "rs0123", z, p, r);
+		panel.setDatasetDetails("Dataset2", "ENSG001", "rs0123", z, p, r, 0.01,x.length);
 		g.addPanel(panel);
 
 		panel = new QTLPanel(1, 1);
 		z = 10.0587;
 		p = 1e-232;
 		r = 0.546874;
-		panel.setDatasetDetails("Dataset3", "ENSG001", "rs0123", z, p, r);
+		panel.setDatasetDetails("Dataset3", "ENSG001", "rs0123", z, p, r, 0.01,x.length);
 		panel.setNotTested();
 		g.addPanel(panel);
 
 		try {
-			g.draw("d:\\test.pdf", DefaultGraphics.Output.PDF);
+			g.draw("test.pdf", DefaultGraphics.Output.PDF);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		} catch (DocumentException e) {

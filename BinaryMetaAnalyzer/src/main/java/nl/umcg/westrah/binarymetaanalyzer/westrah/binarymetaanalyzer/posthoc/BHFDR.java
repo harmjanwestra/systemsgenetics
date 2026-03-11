@@ -9,17 +9,7 @@ import java.util.Iterator;
 
 public class BHFDR {
 	
-	public static void main(String[] args) {
-		String in = "D:\\biogen\\trans\\eQTLs.txt.gz";
-		String out = "D:\\biogen\\trans\\eQTLs-fdr.txt.gz";
-		double p = 0.05;
-		BHFDR f = new BHFDR();
-		try {
-			f.run(in, p, out);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
+
 	
 	
 	public void run(String in, double significance, String out) throws IOException {

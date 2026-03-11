@@ -78,15 +78,30 @@ public class VCFTabix {
 
 //		System.out.println("Query: " + region.getChromosome().getNumber() + ":" + start + "-" + stop + "\t" + treader.getSource());
         String queryStr = region.getChromosome().getNumber() + ":" + start + "-" + stop;
-//        System.out.println(queryStr);
+//        System.out.println("Tabix query: "+queryStr);
+        boolean queryWithChr = false;
         try {
             TabixReader.Iterator window = treader.query(queryStr);
             return window;
         } catch (ArrayIndexOutOfBoundsException e) {
-            queryStr = "chr" + region.getChromosome().getNumber() + ":" + start + "-" + stop;
-            TabixReader.Iterator window = treader.query(queryStr);
-            return window;
+            queryWithChr = true;
+//            e.printStackTrace();
         }
+        String origQuery = queryStr;
+        if (queryWithChr) {
+            try {
+
+                queryStr = "chr" + region.getChromosome().getNumber() + ":" + start + "-" + stop;
+                TabixReader.Iterator window = treader.query(queryStr);
+                return window;
+            } catch (ArrayIndexOutOfBoundsException e) {
+//                System.err.println("Tabix query: " + queryStr + " or "+origQuery+" threw ArrayIndexOutOfBoundsException");
+//                System.err.println("This probably means that the query is outside of the boundaries for VCF file: "+this.tabixfile);
+//                System.exit(-1);
+                return null;
+            }
+        }
+        return null;
     }
 
     public void close() {
@@ -148,18 +163,30 @@ public class VCFTabix {
 
     public Iterator<VCFVariant> getVariants(Feature f, boolean[] samplefilter, Set<String> variantIdFilter) throws IOException {
         TabixReader.Iterator iterator = query(f);
+
+        if (iterator == null) {
+//            System.out.println("Iterator is null....");
+            return null;
+        }
         return new VCFVariantIterator(iterator, samplefilter, variantIdFilter);
     }
 
     public Iterator<VCFVariant> getVariants(Feature f, boolean[] samplefilter) throws IOException {
         TabixReader.Iterator iterator = query(f);
+        if (iterator == null) {
+            return null;
+        }
         return new VCFVariantIterator(iterator, samplefilter);
     }
 
     public ArrayList<VCFVariant> getAllVariants(Feature f, boolean[] samplefilter) throws IOException {
-        TabixReader.Iterator iterator = query(f);
-        String next = iterator.next();
         ArrayList<VCFVariant> output = new ArrayList<>();
+        TabixReader.Iterator iterator = query(f);
+        if (iterator == null) {
+            return output;
+        }
+        String next = iterator.next();
+
         while (next != null) {
             output.add(new VCFVariant(next, VCFVariant.PARSE.ALL, samplefilter));
             next = iterator.next();
