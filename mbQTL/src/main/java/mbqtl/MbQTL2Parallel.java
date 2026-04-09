@@ -751,6 +751,7 @@ public class MbQTL2Parallel extends QTLAnalysis {
                                                 }
 
                                                 // re-rank data if there is missing data? original EMP does not, but it is the right thing to do...
+                                                double[] datasetDsPrunedOrig = datasetDsPruned;
                                                 if (rankData) {
 
                                                     RankArray ranker = new RankArray();
@@ -760,6 +761,8 @@ public class MbQTL2Parallel extends QTLAnalysis {
 
                                                     // also rank genotypes if no hard calls are used
                                                     if(!useHardGenotypeCalls){
+                                                        datasetDsPrunedOrig = new double[datasetDsPruned.length];
+                                                        System.arraycopy(datasetDsPruned, 0, datasetDsPrunedOrig, 0, datasetDsPruned.length);
                                                         datasetDsPruned = ranker.rank(datasetDsPruned, true);
                                                     }
                                                 }
@@ -768,16 +771,15 @@ public class MbQTL2Parallel extends QTLAnalysis {
                                                 dsWithMinObs++;
                                                 // count the number of alleles, used later to estimate Beta and SE from MetaZ
                                                 if (permutation == -1) {
-                                                    for (int i = 0; i < datasetGtPruned.length; i++) {
-
-                                                        if (datasetDsPruned[i] >= 0.5 && datasetDsPruned[i] <= 1.5) {
+                                                    for (double v : datasetDsPrunedOrig) {
+                                                        if (v >= 0.5 && v <= 1.5) {
                                                             nrAltAlleles += 1;
-                                                        } else if (datasetDsPruned[i] > 1.5) {
+                                                        } else if (v > 1.5) {
                                                             nrAltAlleles += 2;
                                                         }
 //														System.out.println(d + "\t" + i + "\t" + datasetGtPruned[i] + "\t" + datasetDsPruned[i] + "\t" + nrAltAlleles);
                                                     }
-                                                    nrTotalAlleles += datasetGtPruned.length * 2;
+                                                    nrTotalAlleles += datasetDsPrunedOrig.length * 2;
                                                 }
 
                                                 datasetDsPruned = Util.centerScale(datasetDsPruned); // This may not be required
